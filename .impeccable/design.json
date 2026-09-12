@@ -1,0 +1,585 @@
+{
+  "schemaVersion": 2,
+  "generatedAt": "2026-09-12T11:18:04.544Z",
+  "title": "Design System: SculptHoard",
+  "extensions": {
+    "colorMeta": {
+      "action-hover": {
+        "role": "primary",
+        "displayName": "Action Hover",
+        "tonalRamp": [
+          "oklch(15.00% 0.1482 36.46)",
+          "oklch(26.43% 0.1482 36.46)",
+          "oklch(37.86% 0.1482 36.46)",
+          "oklch(49.29% 0.1482 36.46)",
+          "oklch(60.71% 0.1482 36.46)",
+          "oklch(72.14% 0.1482 36.46)",
+          "oklch(83.57% 0.1482 36.46)",
+          "oklch(95.00% 0.1482 36.46)"
+        ]
+      },
+      "focus": {
+        "role": "primary",
+        "displayName": "Focus",
+        "tonalRamp": [
+          "oklch(15.00% 0.1446 39.83)",
+          "oklch(26.43% 0.1446 39.83)",
+          "oklch(37.86% 0.1446 39.83)",
+          "oklch(49.29% 0.1446 39.83)",
+          "oklch(60.71% 0.1446 39.83)",
+          "oklch(72.14% 0.1446 39.83)",
+          "oklch(83.57% 0.1446 39.83)",
+          "oklch(95.00% 0.1446 39.83)"
+        ]
+      },
+      "background": {
+        "role": "neutral",
+        "displayName": "Background",
+        "tonalRamp": [
+          "oklch(15.00% 0.0053 106.50)",
+          "oklch(26.43% 0.0053 106.50)",
+          "oklch(37.86% 0.0053 106.50)",
+          "oklch(49.29% 0.0053 106.50)",
+          "oklch(60.71% 0.0053 106.50)",
+          "oklch(72.14% 0.0053 106.50)",
+          "oklch(83.57% 0.0053 106.50)",
+          "oklch(95.00% 0.0053 106.50)"
+        ]
+      },
+      "surface": {
+        "role": "neutral",
+        "displayName": "Surface",
+        "tonalRamp": [
+          "oklch(15.00% 0.0040 106.47)",
+          "oklch(26.43% 0.0040 106.47)",
+          "oklch(37.86% 0.0040 106.47)",
+          "oklch(49.29% 0.0040 106.47)",
+          "oklch(60.71% 0.0040 106.47)",
+          "oklch(72.14% 0.0040 106.47)",
+          "oklch(83.57% 0.0040 106.47)",
+          "oklch(95.00% 0.0040 106.47)"
+        ]
+      },
+      "library": {
+        "role": "neutral",
+        "displayName": "Library",
+        "tonalRamp": [
+          "oklch(15.00% 0.0080 114.22)",
+          "oklch(26.43% 0.0080 114.22)",
+          "oklch(37.86% 0.0080 114.22)",
+          "oklch(49.29% 0.0080 114.22)",
+          "oklch(60.71% 0.0080 114.22)",
+          "oklch(72.14% 0.0080 114.22)",
+          "oklch(83.57% 0.0080 114.22)",
+          "oklch(95.00% 0.0080 114.22)"
+        ]
+      },
+      "text": {
+        "role": "neutral",
+        "displayName": "Text",
+        "tonalRamp": [
+          "oklch(15.00% 0.0118 160.69)",
+          "oklch(26.43% 0.0118 160.69)",
+          "oklch(37.86% 0.0118 160.69)",
+          "oklch(49.29% 0.0118 160.69)",
+          "oklch(60.71% 0.0118 160.69)",
+          "oklch(72.14% 0.0118 160.69)",
+          "oklch(83.57% 0.0118 160.69)",
+          "oklch(95.00% 0.0118 160.69)"
+        ]
+      },
+      "muted": {
+        "role": "neutral",
+        "displayName": "Muted",
+        "tonalRamp": [
+          "oklch(15.00% 0.0306 133.20)",
+          "oklch(26.43% 0.0306 133.20)",
+          "oklch(37.86% 0.0306 133.20)",
+          "oklch(49.29% 0.0306 133.20)",
+          "oklch(60.71% 0.0306 133.20)",
+          "oklch(72.14% 0.0306 133.20)",
+          "oklch(83.57% 0.0306 133.20)",
+          "oklch(95.00% 0.0306 133.20)"
+        ]
+      },
+      "line": {
+        "role": "neutral",
+        "displayName": "Line",
+        "tonalRamp": [
+          "oklch(15.00% 0.0095 113.18)",
+          "oklch(26.43% 0.0095 113.18)",
+          "oklch(37.86% 0.0095 113.18)",
+          "oklch(49.29% 0.0095 113.18)",
+          "oklch(60.71% 0.0095 113.18)",
+          "oklch(72.14% 0.0095 113.18)",
+          "oklch(83.57% 0.0095 113.18)",
+          "oklch(95.00% 0.0095 113.18)"
+        ]
+      },
+      "canvas": {
+        "role": "neutral",
+        "displayName": "Canvas",
+        "tonalRamp": [
+          "oklch(15.00% 0.0073 182.48)",
+          "oklch(26.43% 0.0073 182.48)",
+          "oklch(37.86% 0.0073 182.48)",
+          "oklch(49.29% 0.0073 182.48)",
+          "oklch(60.71% 0.0073 182.48)",
+          "oklch(72.14% 0.0073 182.48)",
+          "oklch(83.57% 0.0073 182.48)",
+          "oklch(95.00% 0.0073 182.48)"
+        ]
+      },
+      "canvas-controls": {
+        "role": "neutral",
+        "displayName": "Canvas Controls",
+        "tonalRamp": [
+          "oklch(15.00% 0.0130 154.52)",
+          "oklch(26.43% 0.0130 154.52)",
+          "oklch(37.86% 0.0130 154.52)",
+          "oklch(49.29% 0.0130 154.52)",
+          "oklch(60.71% 0.0130 154.52)",
+          "oklch(72.14% 0.0130 154.52)",
+          "oklch(83.57% 0.0130 154.52)",
+          "oklch(95.00% 0.0130 154.52)"
+        ]
+      },
+      "canvas-active": {
+        "role": "neutral",
+        "displayName": "Canvas Active",
+        "tonalRamp": [
+          "oklch(15.00% 0.0143 153.27)",
+          "oklch(26.43% 0.0143 153.27)",
+          "oklch(37.86% 0.0143 153.27)",
+          "oklch(49.29% 0.0143 153.27)",
+          "oklch(60.71% 0.0143 153.27)",
+          "oklch(72.14% 0.0143 153.27)",
+          "oklch(83.57% 0.0143 153.27)",
+          "oklch(95.00% 0.0143 153.27)"
+        ]
+      },
+      "canvas-text": {
+        "role": "neutral",
+        "displayName": "Canvas Text",
+        "tonalRamp": [
+          "oklch(15.00% 0.0136 120.28)",
+          "oklch(26.43% 0.0136 120.28)",
+          "oklch(37.86% 0.0136 120.28)",
+          "oklch(49.29% 0.0136 120.28)",
+          "oklch(60.71% 0.0136 120.28)",
+          "oklch(72.14% 0.0136 120.28)",
+          "oklch(83.57% 0.0136 120.28)",
+          "oklch(95.00% 0.0136 120.28)"
+        ]
+      },
+      "secondary": {
+        "role": "neutral",
+        "displayName": "Secondary",
+        "tonalRamp": [
+          "oklch(15.00% 0.0054 117.92)",
+          "oklch(26.43% 0.0054 117.92)",
+          "oklch(37.86% 0.0054 117.92)",
+          "oklch(49.29% 0.0054 117.92)",
+          "oklch(60.71% 0.0054 117.92)",
+          "oklch(72.14% 0.0054 117.92)",
+          "oklch(83.57% 0.0054 117.92)",
+          "oklch(95.00% 0.0054 117.92)"
+        ]
+      },
+      "secondary-text": {
+        "role": "neutral",
+        "displayName": "Secondary Text",
+        "tonalRamp": [
+          "oklch(15.00% 0.0201 139.43)",
+          "oklch(26.43% 0.0201 139.43)",
+          "oklch(37.86% 0.0201 139.43)",
+          "oklch(49.29% 0.0201 139.43)",
+          "oklch(60.71% 0.0201 139.43)",
+          "oklch(72.14% 0.0201 139.43)",
+          "oklch(83.57% 0.0201 139.43)",
+          "oklch(95.00% 0.0201 139.43)"
+        ]
+      },
+      "secondary-hover": {
+        "role": "neutral",
+        "displayName": "Secondary Hover",
+        "tonalRamp": [
+          "oklch(15.00% 0.0123 121.70)",
+          "oklch(26.43% 0.0123 121.70)",
+          "oklch(37.86% 0.0123 121.70)",
+          "oklch(49.29% 0.0123 121.70)",
+          "oklch(60.71% 0.0123 121.70)",
+          "oklch(72.14% 0.0123 121.70)",
+          "oklch(83.57% 0.0123 121.70)",
+          "oklch(95.00% 0.0123 121.70)"
+        ]
+      },
+      "region-selected": {
+        "role": "neutral",
+        "displayName": "Region Selected",
+        "tonalRamp": [
+          "oklch(15.00% 0.0177 120.69)",
+          "oklch(26.43% 0.0177 120.69)",
+          "oklch(37.86% 0.0177 120.69)",
+          "oklch(49.29% 0.0177 120.69)",
+          "oklch(60.71% 0.0177 120.69)",
+          "oklch(72.14% 0.0177 120.69)",
+          "oklch(83.57% 0.0177 120.69)",
+          "oklch(95.00% 0.0177 120.69)"
+        ]
+      },
+      "approved": {
+        "role": "neutral",
+        "displayName": "Approved",
+        "tonalRamp": [
+          "oklch(15.00% 0.0308 125.20)",
+          "oklch(26.43% 0.0308 125.20)",
+          "oklch(37.86% 0.0308 125.20)",
+          "oklch(49.29% 0.0308 125.20)",
+          "oklch(60.71% 0.0308 125.20)",
+          "oklch(72.14% 0.0308 125.20)",
+          "oklch(83.57% 0.0308 125.20)",
+          "oklch(95.00% 0.0308 125.20)"
+        ]
+      },
+      "approved-text": {
+        "role": "neutral",
+        "displayName": "Approved Text",
+        "tonalRamp": [
+          "oklch(15.00% 0.0823 131.18)",
+          "oklch(26.43% 0.0823 131.18)",
+          "oklch(37.86% 0.0823 131.18)",
+          "oklch(49.29% 0.0823 131.18)",
+          "oklch(60.71% 0.0823 131.18)",
+          "oklch(72.14% 0.0823 131.18)",
+          "oklch(83.57% 0.0823 131.18)",
+          "oklch(95.00% 0.0823 131.18)"
+        ]
+      },
+      "region-lavender": {
+        "role": "secondary",
+        "displayName": "Region Lavender",
+        "tonalRamp": [
+          "oklch(15.00% 0.1040 292.52)",
+          "oklch(26.43% 0.1040 292.52)",
+          "oklch(37.86% 0.1040 292.52)",
+          "oklch(49.29% 0.1040 292.52)",
+          "oklch(60.71% 0.1040 292.52)",
+          "oklch(72.14% 0.1040 292.52)",
+          "oklch(83.57% 0.1040 292.52)",
+          "oklch(95.00% 0.1040 292.52)"
+        ]
+      },
+      "region-mint": {
+        "role": "secondary",
+        "displayName": "Region Mint",
+        "tonalRamp": [
+          "oklch(15.00% 0.0788 139.32)",
+          "oklch(26.43% 0.0788 139.32)",
+          "oklch(37.86% 0.0788 139.32)",
+          "oklch(49.29% 0.0788 139.32)",
+          "oklch(60.71% 0.0788 139.32)",
+          "oklch(72.14% 0.0788 139.32)",
+          "oklch(83.57% 0.0788 139.32)",
+          "oklch(95.00% 0.0788 139.32)"
+        ]
+      },
+      "region-rose": {
+        "role": "secondary",
+        "displayName": "Region Rose",
+        "tonalRamp": [
+          "oklch(15.00% 0.0783 4.76)",
+          "oklch(26.43% 0.0783 4.76)",
+          "oklch(37.86% 0.0783 4.76)",
+          "oklch(49.29% 0.0783 4.76)",
+          "oklch(60.71% 0.0783 4.76)",
+          "oklch(72.14% 0.0783 4.76)",
+          "oklch(83.57% 0.0783 4.76)",
+          "oklch(95.00% 0.0783 4.76)"
+        ]
+      },
+      "region-ochre": {
+        "role": "secondary",
+        "displayName": "Region Ochre",
+        "tonalRamp": [
+          "oklch(15.00% 0.1059 86.23)",
+          "oklch(26.43% 0.1059 86.23)",
+          "oklch(37.86% 0.1059 86.23)",
+          "oklch(49.29% 0.1059 86.23)",
+          "oklch(60.71% 0.1059 86.23)",
+          "oklch(72.14% 0.1059 86.23)",
+          "oklch(83.57% 0.1059 86.23)",
+          "oklch(95.00% 0.1059 86.23)"
+        ]
+      },
+      "region-cyan": {
+        "role": "secondary",
+        "displayName": "Region Cyan",
+        "tonalRamp": [
+          "oklch(15.00% 0.0656 213.65)",
+          "oklch(26.43% 0.0656 213.65)",
+          "oklch(37.86% 0.0656 213.65)",
+          "oklch(49.29% 0.0656 213.65)",
+          "oklch(60.71% 0.0656 213.65)",
+          "oklch(72.14% 0.0656 213.65)",
+          "oklch(83.57% 0.0656 213.65)",
+          "oklch(95.00% 0.0656 213.65)"
+        ]
+      },
+      "region-peach": {
+        "role": "secondary",
+        "displayName": "Region Peach",
+        "tonalRamp": [
+          "oklch(15.00% 0.1055 50.13)",
+          "oklch(26.43% 0.1055 50.13)",
+          "oklch(37.86% 0.1055 50.13)",
+          "oklch(49.29% 0.1055 50.13)",
+          "oklch(60.71% 0.1055 50.13)",
+          "oklch(72.14% 0.1055 50.13)",
+          "oklch(83.57% 0.1055 50.13)",
+          "oklch(95.00% 0.1055 50.13)"
+        ]
+      },
+      "region-stone": {
+        "role": "secondary",
+        "displayName": "Region Stone",
+        "tonalRamp": [
+          "oklch(15.00% 0.0223 85.95)",
+          "oklch(26.43% 0.0223 85.95)",
+          "oklch(37.86% 0.0223 85.95)",
+          "oklch(49.29% 0.0223 85.95)",
+          "oklch(60.71% 0.0223 85.95)",
+          "oklch(72.14% 0.0223 85.95)",
+          "oklch(83.57% 0.0223 85.95)",
+          "oklch(95.00% 0.0223 85.95)"
+        ]
+      },
+      "region-periwinkle": {
+        "role": "secondary",
+        "displayName": "Region Periwinkle",
+        "tonalRamp": [
+          "oklch(15.00% 0.0791 265.64)",
+          "oklch(26.43% 0.0791 265.64)",
+          "oklch(37.86% 0.0791 265.64)",
+          "oklch(49.29% 0.0791 265.64)",
+          "oklch(60.71% 0.0791 265.64)",
+          "oklch(72.14% 0.0791 265.64)",
+          "oklch(83.57% 0.0791 265.64)",
+          "oklch(95.00% 0.0791 265.64)"
+        ]
+      },
+      "action": {
+        "role": "primary",
+        "displayName": "Kiln Orange",
+        "tonalRamp": [
+          "oklch(15.00% 0.1598 36.83)",
+          "oklch(26.43% 0.1598 36.83)",
+          "oklch(37.86% 0.1598 36.83)",
+          "oklch(49.29% 0.1598 36.83)",
+          "oklch(60.71% 0.1598 36.83)",
+          "oklch(72.14% 0.1598 36.83)",
+          "oklch(83.57% 0.1598 36.83)",
+          "oklch(95.00% 0.1598 36.83)"
+        ]
+      }
+    },
+    "typographyMeta": {
+      "headline": {
+        "displayName": "Asset headline",
+        "purpose": "Current texture name."
+      },
+      "title": {
+        "displayName": "Inspector title",
+        "purpose": "Compact panel headings."
+      },
+      "body": {
+        "displayName": "Workbench body",
+        "purpose": "General prose and inherited type."
+      },
+      "label": {
+        "displayName": "Action label",
+        "purpose": "Strong compact controls."
+      },
+      "small": {
+        "displayName": "Supporting explanation",
+        "purpose": "Inspector explanatory text."
+      },
+      "micro": {
+        "displayName": "Fine metadata",
+        "purpose": "Qualified model confidence and brief metadata."
+      }
+    },
+    "shadows": [
+      {
+        "name": "canvas-ambient",
+        "value": "0 8px 24px #28352610",
+        "purpose": "Preview separation from chalk."
+      },
+      {
+        "name": "uv-texture",
+        "value": "0 3px 18px #0003",
+        "purpose": "Texture against checkerboard."
+      },
+      {
+        "name": "library-drawer",
+        "value": "8px 0 25px #1e2e2020",
+        "purpose": "Overlay rail on narrow layouts."
+      },
+      {
+        "name": "status-toast",
+        "value": "0 6px 30px #22321e25",
+        "purpose": "Temporary confirmation."
+      }
+    ],
+    "motion": [
+      {
+        "name": "button-state",
+        "value": "background .16s, color .16s, border-color .16s",
+        "purpose": "Button hover state changes."
+      },
+      {
+        "name": "spinner",
+        "value": "spin 1.4s linear infinite",
+        "purpose": "Pending work."
+      },
+      {
+        "name": "reduced-motion",
+        "value": "@media(prefers-reduced-motion:reduce){*{animation:none!important;transition:none!important}}",
+        "purpose": "Remove motion when requested."
+      },
+      {
+        "name": "editor-selection",
+        "value": "scrollIntoView({block:'nearest',behavior:'instant'})",
+        "purpose": "Bring selected-region controls into view immediately."
+      }
+    ],
+    "breakpoints": [
+      {
+        "name": "wide-min",
+        "value": "1600px"
+      },
+      {
+        "name": "compact-max",
+        "value": "1150px"
+      },
+      {
+        "name": "drawer-max",
+        "value": "950px"
+      },
+      {
+        "name": "phone-max",
+        "value": "680px"
+      }
+    ]
+  },
+  "components": [
+    {
+      "name": "Primary action",
+      "kind": "button",
+      "refersTo": "button-primary",
+      "description": "Orange processing action, with restrained hover and visible keyboard focus.",
+      "html": "<button class=\"ds-primary\">Preparar texturas</button>",
+      "css": ".ds-primary{font-family:'Manrope Variable',sans-serif;cursor:pointer;transition:background .16s,color .16s,border-color .16s;display:inline-flex;align-items:center;justify-content:center;gap:8px;border:1px solid transparent;border-radius:var(--radius,7px);padding:10px 14px;font-size:11px;font-weight:700;min-height:36px;background:var(--accent,#c8512e);color:#fff}.ds-primary:hover:not(:disabled){background:#af4324}.ds-primary:focus-visible{outline:2px solid var(--focus,#d76c46);outline-offset:3px}.ds-primary:disabled{opacity:.45;cursor:not-allowed}"
+    },
+    {
+      "name": "Secondary action",
+      "kind": "button",
+      "refersTo": "button-secondary",
+      "description": "Pale bordered action for export or applying reviewed changes.",
+      "html": "<button class=\"ds-secondary\">Exportar mapas</button>",
+      "css": ".ds-secondary{font-family:'Manrope Variable',sans-serif;cursor:pointer;transition:background .16s,color .16s,border-color .16s;display:inline-flex;align-items:center;justify-content:center;gap:8px;border:1px solid transparent;border-radius:var(--radius,7px);padding:10px 14px;font-size:11px;font-weight:700;min-height:36px;background:#fbfcf8;color:#363e34;border-color:#d5d9cf}.ds-secondary:hover:not(:disabled){background:#edf0e7;border-color:#bac3b1}.ds-secondary:focus-visible{outline:2px solid var(--focus,#d76c46);outline-offset:3px}.ds-secondary:disabled{opacity:.45;cursor:not-allowed}"
+    },
+    {
+      "name": "Reviewed action",
+      "kind": "button",
+      "refersTo": "button-approved",
+      "description": "Saved review uses a check and explicit copy together with sage fill.",
+      "html": "<button class=\"ds-approved\"><svg width=\"16\" height=\"16\" viewBox=\"0 0 24 24\" fill=\"none\" stroke=\"currentColor\" stroke-width=\"1.5\" aria-hidden=\"true\"><path d=\"m4 12 5 5L20 6\"/></svg>Revisión guardada</button>",
+      "css": ".ds-approved{font-family:'Manrope Variable',sans-serif;cursor:pointer;transition:background .16s,color .16s,border-color .16s;display:inline-flex;align-items:center;justify-content:center;gap:8px;border:1px solid transparent;border-radius:var(--radius,7px);padding:10px 14px;font-size:11px;font-weight:700;min-height:36px;background:#e1ead4;color:#48622f}.ds-approved:focus-visible{outline:2px solid var(--focus,#d76c46);outline-offset:3px}.ds-approved:disabled{opacity:.45;cursor:not-allowed}"
+    },
+    {
+      "name": "Named surface field",
+      "kind": "input",
+      "refersTo": "field",
+      "description": "Compact editable surface name with a visible label.",
+      "html": "<label class=\"ds-field\">Nombre<input value=\"Cabeza (superficie base)\" /></label>",
+      "css": ".ds-field{display:flex;flex-direction:column;gap:8px;font-family:'Manrope Variable',sans-serif;font-size:10px;color:#6e7a62}.ds-field input{font:inherit;height:33px;min-width:0;border:1px solid var(--line,#dedfd8);border-radius:5px;background:#fff;color:#394137;padding:8px;caret-color:var(--accent,#c8512e)}.ds-field input:focus-visible{outline:2px solid var(--focus,#d76c46);outline-offset:3px}.ds-field input:disabled{opacity:.45}"
+    },
+    {
+      "name": "Preview navigation",
+      "kind": "nav",
+      "refersTo": "canvas-tab-active",
+      "description": "Three work surfaces share dark segmented tabs; selected state uses fill and text.",
+      "html": "<nav class=\"ds-preview-nav\" aria-label=\"Vista\"><button aria-pressed=\"true\">Modelo 3D</button><button aria-pressed=\"false\">Textura UV</button><button aria-pressed=\"false\">Relieve</button></nav>",
+      "css": ".ds-preview-nav{display:flex;gap:3px;padding:11px 13px;background:var(--canvas,#272c2b)}.ds-preview-nav button{font-family:'Manrope Variable',sans-serif;cursor:pointer;transition:background .16s,color .16s,border-color .16s;border:0;border-radius:5px;padding:8px 10px;background:transparent;font-size:10px;color:#9ba69e;white-space:nowrap}.ds-preview-nav button[aria-pressed=true]{background:#444c46;color:#f0f3e9}.ds-preview-nav button:hover:not(:disabled){background:#39423b;color:#eaf0e5}.ds-preview-nav button:focus-visible{outline:2px solid var(--focus,#d76c46);outline-offset:3px}"
+    },
+    {
+      "name": "Proposal badge",
+      "kind": "chip",
+      "description": "Non-interactive text badge distinguishes the state of an interpretation.",
+      "html": "<span class=\"ds-proposal\">Desactualizada</span>",
+      "css": ".ds-proposal{display:inline-block;font-family:'Manrope Variable',sans-serif;font-size:9px;padding:3px 5px;background:#eeeada;border-radius:3px;color:#746842}"
+    },
+    {
+      "name": "Selected region",
+      "kind": "custom",
+      "refersTo": "region-row-selected",
+      "description": "Numbered identity, name, interpretation and height remain visible in the selected row.",
+      "html": "<button class=\"ds-region\"><span class=\"ds-swatch\">3</span><span class=\"ds-name\">Brazo izquierdo (base)<small>Volumen en geometría</small></span><span class=\"ds-height\">128</span></button>",
+      "css": ".ds-region{font-family:'Manrope Variable',sans-serif;cursor:pointer;transition:background .16s,color .16s,border-color .16s;display:flex;align-items:center;gap:9px;width:100%;padding:8px;border:1px solid #d9e1ca;border-radius:6px;background:#edf1e4;text-align:left;color:#3f4b35}.ds-region:hover{background:#f0f3e9}.ds-region:focus-visible{outline:2px solid var(--focus,#d76c46);outline-offset:3px}.ds-swatch{width:28px;height:28px;display:grid;place-items:center;border-radius:5px;background:#eaa9b7;color:#29362a;font-size:10px;font-weight:700;flex-shrink:0}.ds-name{flex:1;min-width:0;font-size:11px}.ds-name small{display:block;font-size:9px;color:var(--muted,#65705e);margin-top:3px}.ds-height{font-size:10px;color:var(--muted,#65705e);font-variant-numeric:tabular-nums}"
+    },
+    {
+      "name": "Preview container",
+      "kind": "card",
+      "refersTo": "canvas",
+      "description": "Graphite framed working surface with a restrained shadow and control bar.",
+      "html": "<div class=\"ds-canvas\"><div class=\"ds-stage\">PERSPECTIVA</div><div class=\"ds-controls\">Original<span>4 superficies · UV vinculadas</span></div></div>",
+      "css": ".ds-canvas{background:var(--canvas,#272c2b);border-radius:10px;overflow:hidden;box-shadow:0 8px 24px #28352610;font-family:'Manrope Variable',sans-serif}.ds-stage{height:170px;padding:22px 23px;color:#a7b1a8;font-size:8px;letter-spacing:.12em}.ds-controls{height:46px;padding:0 17px;display:flex;justify-content:space-between;align-items:center;border-top:1px solid #424a43;background:#2e3530;color:#b4bfb4;font-size:10px}.ds-controls span{font-size:9px}"
+    },
+    {
+      "name": "Folder import",
+      "kind": "button",
+      "description": "Dashed import target with a compact label and helper line.",
+      "html": "<button class=\"ds-import\"><span>Importar carpeta<small>Modelo y texturas originales</small></span><span aria-hidden=\"true\">+</span></button>",
+      "css": ".ds-import{font-family:'Manrope Variable',sans-serif;cursor:pointer;transition:background .16s,color .16s,border-color .16s;display:flex;align-items:center;gap:9px;width:100%;border:1px dashed #bcc4b4;border-radius:7px;padding:13px 10px;color:#45513e;background:#f9faf6;text-align:left}.ds-import>span:first-child{font-size:11px;font-weight:700;flex:1}.ds-import small{display:block;font-size:9px;font-weight:450;color:#73806a;margin-top:3px}.ds-import:hover{background:#e9eee1}.ds-import:focus-visible{outline:2px solid var(--focus,#d76c46);outline-offset:3px}"
+    }
+  ],
+  "narrative": {
+    "northStar": "The Digital Material Workbench",
+    "overview": "The figure and its textures occupy a graphite working area, surrounded by chalk panels with a slight olive cast. Compact Manrope typography, precise dividers and restrained orange actions make this an editor for close inspection and quick correction. The visual direction comes from the delegated, code-led build recorded in `docs/surface.md`.\n\nPastel numbers identify regions across the texture and inspector. Selection changes the viewed material and brings its height controls into view, connecting the visual result to a concrete adjustment. The system keeps processing, proposals and reviewed states visibly distinct without implying measured AI accuracy.",
+    "keyCharacteristics": [
+      "Graphite working canvas framed by chalk tool panels.",
+      "Compact Manrope typography and tabular numeric metadata.",
+      "Orange actions, quiet olive neutrals and numbered pastel region identities.",
+      "Connected selection across preview, region list and height editor.",
+      "Flat panel structure with restrained shadow around the working surface."
+    ],
+    "rules": [
+      {
+        "name": "The Identity and Height Rule",
+        "body": "Region colors identify numbered regions. “Colores de relieve” uses a separate fixed 256-entry height palette generated in `backend/processing.py`; its RGB values are labels for heights, not luminance measurements. Grayscale height values range from 0 to 255 with an initial neutral value of 128. Preserve this distinction in new legends and controls.",
+        "section": "colors"
+      },
+      {
+        "name": "The Quiet Hierarchy Rule",
+        "body": "Establish hierarchy through weight, spacing and panel grouping before increasing text size.",
+        "section": "typography"
+      }
+    ],
+    "dos": [
+      "**Do** keep the figure and textures visually dominant inside the graphite canvas.",
+      "**Do** pair pastel region colors with visible numbers and selection state.",
+      "**Do** keep selected-region height controls immediately reachable.",
+      "**Do** use the existing Manrope hierarchy and tabular numeric metadata.",
+      "**Do** retain explicit proposal, stale, processing and reviewed states.",
+      "**Do** preserve keyboard focus outlines and reduced-motion behavior."
+    ],
+    "donts": [
+      "**Don't** interpret region-ID colors as height or derive height from the fixed palette's luminance.",
+      "**Don't** describe a selected or highlighted region as proof of AI accuracy.",
+      "**Don't** replace the compact tool layout with decorative cards or promotional hero styling.",
+      "**Don't** remove the approximate-preview caption or confidence qualification.",
+      "**Don't** use color alone to identify a region or reviewed state."
+    ]
+  }
+}
