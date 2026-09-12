@@ -105,7 +105,18 @@ def evidence_crop(source, labels, ids):
     return image
 
 
-def audit(model, source, labels, regions, plan, evidence, limit=2):
+def audit(
+    model,
+    source,
+    labels,
+    regions,
+    plan,
+    evidence,
+    limit=2,
+    scene_context=None,
+    model_reference=None,
+    projected=None,
+):
     from .surface_plan import SurfaceDescription, decode_assignments
 
     evidence = Path(evidence)
@@ -127,7 +138,7 @@ def audit(model, source, labels, regions, plan, evidence, limit=2):
             "They were grouped with "
             + item["parentName"]
             + ", but their different appearance needs a closer look; that earlier name may be wrong. "
-            "Do not assume a darker color is a hole. Return a concise Spanish name, physical role and visual reason, without heights. "
+            "Do not assume a darker color is a hole. Return ONE object with a concise Spanish name, physical role and ONE finished visual-evidence sentence under 140 characters, without heights. "
             "Atlas context (not ground truth): " + plan["description"]
         )
         schema = SurfaceDescription.model_json_schema()
@@ -138,17 +149,49 @@ def audit(model, source, labels, regions, plan, evidence, limit=2):
             schema["properties"]["role"]["enum"]
         )
         prompt += '\nJSON shape: {"name":"Spanish part name", "role":"one exact allowed role", "reason":"short visual reason"}.'
+        images = [base64.b64encode(png_bytes(image)).decode()]
+        scene_keys = None
+        thinking = False
+        if isinstance(scene_context, dict) and scene_context.get("parts"):
+            scene_keys = [p["key"] for p in scene_context["parts"]] + ["unresolved"]
+            thinking = scene_context.get("generation", {}).get("thinkingEnabled", False)
+            schema["properties"]["scenePart"] = {"type": "string", "enum": scene_keys}
+            schema["required"].append("scenePart")
+            prompt += (
+                "\nThe selected IDs are "
+                + str(item["classes"])
+                + ". Return scenePart linking your decision to one of these observed parts: "
+                + json.dumps(scene_context["parts"], ensure_ascii=False)
+                + ". Use unresolved if their identity cannot be established. The scene observations are hypotheses; verify the actual images."
+            )
+            if model_reference is not None and projected is not None:
+                from .region_evidence import focused_annotation
+
+                context_image, visible = focused_annotation(
+                    model_reference, projected, selection=item["classes"]
+                )
+                context_image.save(folder / "model-context.png")
+                images.append(base64.b64encode(png_bytes(context_image)).decode())
+                prompt += (
+                    "\nImage 1 is the UV crop; image 2 is the real original model with ONLY selected visible IDs. Visible IDs: "
+                    + str(visible)
+                    + ". Read their physical location on the model. Hidden IDs cannot be localized by assuming the atlas is a face."
+                )
         payload = {
             "model": model,
             "stream": False,
-            "think": False,
+            "think": thinking,
             "format": schema,
-            "options": {"temperature": 0, "num_ctx": 16384, "num_predict": 500},
+            "options": {
+                "temperature": 0,
+                "num_ctx": 16384,
+                "num_predict": 2000 if thinking else 500,
+            },
             "messages": [
                 {
                     "role": "user",
                     "content": prompt,
-                    "images": [base64.b64encode(png_bytes(image)).decode()],
+                    "images": images,
                 }
             ],
         }
@@ -159,7 +202,25 @@ def audit(model, source, labels, regions, plan, evidence, limit=2):
             response = client.post(OLLAMA + "/api/chat", json=payload)
             check_response(response, folder)
             raw = response.json()
+            if raw.get("done_reason") == "length":
+                (folder / "incomplete-attempt.json").write_text(
+                    json.dumps(raw, ensure_ascii=False, indent=2), "utf-8"
+                )
+                # One bounded retry changes the output budget strategy, never
+                # the images or the previous heights. Preserve both attempts.
+                payload["think"] = False
+                payload["options"]["num_predict"] = 900
+                response = client.post(OLLAMA + "/api/chat", json=payload)
+                check_response(response, folder)
+                raw = response.json()
+                raw["compactRetryAfterLength"] = True
         (folder / "raw.json").write_text(json.dumps(raw, ensure_ascii=False, indent=2), "utf-8")
+        if raw.get("done_reason") == "length":
+            result["warnings"].append(
+                "La inspección quedó incompleta; se conservan las alturas anteriores de "
+                + str(item["classes"])
+            )
+            continue
         group = json.loads(raw["message"]["content"])
         change = decode_assignments(
             json.dumps(
@@ -171,6 +232,7 @@ def audit(model, source, labels, regions, plan, evidence, limit=2):
                 }
             ),
             item["classes"],
+            scene_keys=scene_keys,
         )["surfaces"][0]
         change["semanticSource"] = "focused-inspection"
         ids = set(item["classes"])

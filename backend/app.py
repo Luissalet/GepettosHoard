@@ -763,6 +763,7 @@ def evaluation_job(jid, pid, body, snapshot):
                 "targetMaterials": result.get("targetMaterials", []),
                 "hasDetails": result.get("hasDetails", False),
                 "aiAcceptable": result["aiAcceptable"],
+                "sceneUnderstanding": result.get("sceneUnderstanding"),
                 "review": result.get("selectedReview", result["iterations"][-1]["review"]),
                 "revision": p["revision"] + 1,
             }

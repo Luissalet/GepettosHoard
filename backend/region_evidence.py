@@ -5,11 +5,11 @@ from PIL import Image, ImageDraw, ImageFont
 from scipy import ndimage
 
 
-def project_regions(inventory, material, labels, geometry, size=512):
+def project_regions(inventory, material, labels, geometry, size=512, direction=(0.0, -2.0, 0.27)):
     width, height = (size, size) if isinstance(size, int) else size
     center = np.asarray(geometry["center"])
     scale = geometry["size"] * 1.14
-    toward = np.asarray([0.0, -2.0, 0.27])
+    toward = np.asarray(direction, dtype=float)
     toward /= np.linalg.norm(toward)
     right = np.cross([0.0, 0.0, 1.0], toward)
     right /= np.linalg.norm(right)
@@ -19,7 +19,7 @@ def project_regions(inventory, material, labels, geometry, size=512):
     for item in inventory:
         for points, uv in zip(item.get("world_triangles", []), item["triangles"]):
             xyz = np.asarray(points) - center
-            uv = np.asarray(uv)
+            uv = np.asarray(uv, dtype=float)
             uv -= np.floor(uv.mean(axis=0))
             xy = np.stack(
                 [width / 2 + xyz @ right / scale * width, height / 2 - xyz @ up / scale * width],
@@ -86,3 +86,49 @@ def annotate_regions(reference, projected):
         draw.rectangle((box[0] - 2, box[1] - 1, box[2] + 2, box[3] + 1), fill="black")
         draw.text((x, y), text, fill="white", font=font, anchor="mm")
     return image, visible
+
+
+def locate_in_view(regions, projected):
+    """Visible image positions are evidence, not a guess from atlas arrangement."""
+    height, width = projected.shape
+    for region in regions:
+        y, x = np.nonzero(projected == region["id"])
+        region["frontImageBox"] = (
+            [
+                round(float(x.min()) / width, 3),
+                round(float(y.min()) / height, 3),
+                round(float(x.max() + 1) / width, 3),
+                round(float(y.max() + 1) / height, 3),
+            ]
+            if len(x) >= 4
+            else None
+        )
+    return regions
+
+
+def focused_annotation(reference, projected, selection=None):
+    """Show the selected material large enough to inspect; retain actual UV IDs."""
+    y, x = np.nonzero(projected >= 0)
+    if not len(x):
+        return annotate_regions(reference, projected)
+    margin = max(6, round(max(x.max() - x.min(), y.max() - y.min()) * 0.08))
+    box = (
+        max(0, int(x.min()) - margin),
+        max(0, int(y.min()) - margin),
+        min(projected.shape[1], int(x.max()) + margin + 1),
+        min(projected.shape[0], int(y.max()) + margin + 1),
+    )
+    image_box = (
+        round(box[0] * reference.width / projected.shape[1]),
+        round(box[1] * reference.height / projected.shape[0]),
+        round(box[2] * reference.width / projected.shape[1]),
+        round(box[3] * reference.height / projected.shape[0]),
+    )
+    cropped = reference.crop(image_box).convert("RGB")
+    scale = min(768 / cropped.width, 768 / cropped.height)
+    size = (max(1, round(cropped.width * scale)), max(1, round(cropped.height * scale)))
+    cropped = cropped.resize(size, Image.Resampling.LANCZOS)
+    ids = projected[box[1] : box[3], box[0] : box[2]]
+    if selection is not None:
+        ids = np.where(np.isin(ids, selection), ids, -1)
+    return annotate_regions(cropped, ids)

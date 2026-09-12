@@ -1,5 +1,6 @@
 import json
 import numpy as np
+import pytest
 from backend.semantic_audit import candidates
 from backend.surface_plan import decode_assignments
 
@@ -84,3 +85,58 @@ def test_small_detached_mouth_marks_request_visual_reinspection_without_setting_
     selected = candidates(labels, regions, plan)
     assert selected[0]["classes"] == [1, 2]
     assert "height" not in selected[0] and "role" not in selected[0]
+
+
+@pytest.mark.parametrize("retry_finishes", [True, False])
+def test_truncated_detail_check_retries_once_and_preserves_unresolved_heights(
+    tmp_path, monkeypatch, retry_finishes
+):
+    import copy, httpx
+    from PIL import Image
+    from types import SimpleNamespace
+    from backend import semantic_audit
+
+    monkeypatch.setattr(
+        semantic_audit,
+        "candidates",
+        lambda *args: [{"classes": [1], "color": [10, 10, 10], "parentName": "Skin"}],
+    )
+    requests = []
+
+    class Client:
+        def __init__(self, **kwargs):
+            pass
+
+        def __enter__(self):
+            return self
+
+        def __exit__(self, *args):
+            pass
+
+        def post(self, url, json):
+            requests.append(copy.deepcopy(json))
+            done = len(requests) == 2 and retry_finishes
+            group = {"name": "Pecas", "role": "freckle", "reason": "Pequeñas marcas de la mejilla."}
+            return SimpleNamespace(
+                is_success=True,
+                json=lambda: {
+                    "done_reason": "stop" if done else "length",
+                    "message": {"content": __import__("json").dumps(group) if done else ""},
+                },
+            )
+
+    monkeypatch.setattr(httpx, "Client", Client)
+    original = {
+        "description": "Skin",
+        "surfaces": [{"classes": [1], "name": "Skin", "height": 128}],
+        "warnings": [],
+    }
+    result = semantic_audit.audit(
+        "test", Image.new("RGBA", (32, 32)), np.ones((32, 32), np.int16), [], original, tmp_path
+    )
+    assert len(requests) == 2
+    assert requests[0]["messages"] == requests[1]["messages"]
+    assert (tmp_path / "0/incomplete-attempt.json").is_file()
+    assert result["surfaces"][0]["height"] == (176 if retry_finishes else 128)
+    assert bool(result["warnings"]) != retry_finishes
+    assert original["surfaces"][0]["height"] == 128 and not original["warnings"]

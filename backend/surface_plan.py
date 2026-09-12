@@ -168,6 +168,7 @@ class Plan(BaseModel):
 
 
 class SurfaceDescription(BaseModel):
+    scenePart: str | None = Field(default=None, max_length=40)
     name: str = Field(max_length=70)
     height: int = Field(default=128, ge=64, le=192)
     reason: str = Field(max_length=220)
@@ -211,7 +212,7 @@ class AssignedPlan(BaseModel):
     warnings: list[str] = Field(max_length=8)
 
 
-def decode_assignments(content, ids):
+def decode_assignments(content, ids, scene_keys=None):
     supplied = json.loads(content)
     draft = AssignedPlan.model_validate_json(content).model_dump()
     if set(draft["assignments"]) != {str(i) for i in ids}:
@@ -220,6 +221,8 @@ def decode_assignments(content, ids):
 
     surfaces = []
     for index, group in enumerate(draft["groups"]):
+        if scene_keys is not None and group["scenePart"] not in scene_keys:
+            raise ValueError("El grupo no corresponde a una pieza observada de la figura.")
         role = group["role"]
         name = "".join(
             c
@@ -409,9 +412,11 @@ def infer_plan(
 
 
 SEMANTIC_PROMPT = """Identify the physical surfaces painted in a selected 3D material.
-You see ONE contact sheet: top left is the complete original figure, bottom left
-locates the selected material's numeric region IDs on the original 3D figure,
-and the right panel is that selected material's numbered UV atlas. Other materials
+Image 1 is ONLY the numbered UV atlas of the material you must interpret. Read its
+actual shapes and colors first. Image 2 supplies 3D context: top left is the complete
+original figure, bottom left a close-up of this selected material with projected
+region IDs, and the right repeats its atlas. The atlas in image 1 is authoritative
+about what belongs to THIS material; a part visible elsewhere is not in scope. Other materials
 remain colored for anatomical context but have no region IDs in this request.
 The atlas is authoritative about the selected material. Do not assign parts from
 the complete figure that are absent from this atlas. Do not guess the character name.
@@ -513,18 +518,21 @@ def semantic_contact(reference, atlas, focused):
     sheet.paste(atlas, (512, 45 + (1024 - atlas.height) // 2))
     for point, label in [
         ((24, 15), "FULL ORIGINAL"),
-        ((12, 550), "SELECTED REGION IDs ON ORIGINAL"),
+        ((12, 550), "SELECTED MATERIAL CLOSE-UP / REGION IDs"),
         ((528, 15), "UV ATLAS OF SELECTED MATERIAL"),
     ]:
         draw.text(point, label, font=font, fill="white")
     return sheet
 
 
-def infer_semantics(model, reference, atlas, focused, regions, evidence, observation=None):
+def infer_semantics(
+    model, reference, atlas, focused, regions, evidence, observation=None, reasoning=None
+):
     evidence = Path(evidence)
     evidence.mkdir(parents=True, exist_ok=True)
     sheet = semantic_contact(reference, atlas, focused)
     sheet.save(evidence / "input.png")
+    atlas.save(evidence / "atlas-input.png")
     schema = AssignedPlan.model_json_schema()
     group = schema["$defs"]["SurfaceDescription"]
     group["properties"].pop("height")
@@ -553,18 +561,46 @@ def infer_semantics(model, reference, atlas, focused, regions, evidence, observa
     if observation:
         data["whole_figure_observation"] = observation
         instruction += "\nThe independent whole-figure observation is visual context, not a region assignment. Use it to distinguish similarly shaped features at different physical locations; verify each mapping in the atlas and numbered 3D view."
+    scene_keys = None
+    thinking = False
+    if isinstance(observation, dict) and observation.get("parts"):
+        scene_keys = [part["key"] for part in observation["parts"]] + ["unresolved"]
+        thinking = bool(reasoning) and observation.get("generation", {}).get(
+            "thinkingEnabled", False
+        )
+        data["whole_figure_observation"] = {
+            k: v for k, v in observation.items() if k != "generation"
+        }
+        group["properties"]["scenePart"] = {"type": "string", "enum": scene_keys}
+        group["required"].append("scenePart")
+        instruction += (
+            "\nEach output group MUST include scenePart: exactly one observed part key from "
+            + json.dumps(scene_keys)
+            + ". Link the UV evidence to that part before choosing its role. Name, physical role, model location and scenePart must agree. Use unresolved when the region cannot be grounded. Several groups (e.g. pupil and sclera) can belong to one observed eye part. A tiny edge blend belongs to the physical shape it borders, not a new invented piece."
+        )
+        instruction += "\nVisible front_image_box values are normalized [left,top,right,bottom], with top=0 and bottom=1, from real 3D projection. Null means hidden, not absent. Use these positions to distinguish face features from marks on arms or feet."
+        for row, region in zip(data["regions"], regions):
+            bounds = region.get("modelBounds")
+            row[3] = (
+                [round((a + b) / 2, 3) for a, b in zip(bounds["min"], bounds["max"])]
+                if bounds
+                else None
+            )
+            row.append(region.get("frontImageBox"))
+        data["columns"][3] = "model_center_xyz"
+        data["columns"].append("front_image_box")
     body = {
         "model": model,
         "stream": True,
-        "think": False,
+        "think": thinking,
         "format": schema,
-        "options": {"temperature": 0, "num_ctx": 16384, "num_predict": 3200},
+        "options": {"temperature": 0, "num_ctx": 16384, "num_predict": 6000 if thinking else 3200},
         "messages": [
             {"role": "system", "content": instruction},
             {
                 "role": "user",
                 "content": json.dumps(data, ensure_ascii=False),
-                "images": [base64.b64encode(png_bytes(sheet)).decode()],
+                "images": [base64.b64encode(png_bytes(im)).decode() for im in [atlas, sheet]],
             },
         ],
     }
@@ -577,6 +613,7 @@ def infer_semantics(model, reference, atlas, focused, regions, evidence, observa
         "utf-8",
     )
     content = ""
+    reasoning_chars = 0
     last = {}
     start = time.perf_counter()
     with httpx.Client(timeout=httpx.Timeout(180, connect=10), trust_env=False) as client:
@@ -588,18 +625,43 @@ def infer_semantics(model, reference, atlas, focused, regions, evidence, observa
                 last = json.loads(line)
                 if last.get("error"):
                     raise ValueError(last["error"])
+                reasoning_chars += len(last.get("message", {}).get("thinking", ""))
                 content += last.get("message", {}).get("content", "")
                 (evidence / "partial.txt").write_text(content, "utf-8")
                 if time.perf_counter() - start > 480:
+                    (evidence / "incomplete.json").write_text(
+                        json.dumps(
+                            {
+                                "seconds": round(time.perf_counter() - start, 2),
+                                "reasoningCharacters": reasoning_chars,
+                                "contentCharacters": len(content),
+                                "reason": "timeout",
+                            }
+                        ),
+                        "utf-8",
+                    )
                     raise TimeoutError("El reconocimiento superó ocho minutos.")
     (evidence / "raw.json").write_text(
-        json.dumps(last | {"content": content}, ensure_ascii=False, indent=2), "utf-8"
+        json.dumps(
+            last
+            | {
+                "content": content,
+                "thinkingEnabled": thinking,
+                "reasoningCharacters": reasoning_chars,
+            },
+            ensure_ascii=False,
+            indent=2,
+        ),
+        "utf-8",
     )
-    plan = decode_assignments(content, ids)
+    if last.get("done_reason") == "length":
+        raise ValueError("El reconocimiento quedó incompleto al agotar su presupuesto.")
+    plan = decode_assignments(content, ids, scene_keys=scene_keys)
     plan.update(
         seconds=round(time.perf_counter() - start, 2),
         model=model,
-        method="semantic-contact-then-style",
+        method="scene-grounded-reasoning" if scene_keys else "semantic-contact-then-style",
+        reasoningCharacters=reasoning_chars,
     )
     (evidence / "plan.json").write_text(json.dumps(plan, ensure_ascii=False, indent=2), "utf-8")
     return plan
@@ -611,6 +673,7 @@ def apply_plan(regions, plan):
         r
         | {
             "name": mapped[r["id"]]["name"],
+            "scenePart": mapped[r["id"]].get("scenePart"),
             "semanticSource": mapped[r["id"]].get("semanticSource", "initial-recognition"),
             "height": mapped[r["id"]]["height"],
             "role": mapped[r["id"]].get("role", "unspecified"),
@@ -763,6 +826,10 @@ inspect the visible CONSEQUENCES of your actions,
 not just trust the semantic names from the previous plan. Compare silhouette, broad
 surface smoothness, intentional details, raised layers, recesses and UV seam artifacts.
 Image colors are not heights: ignore illumination and highlights when judging shape.
+The artist intentionally wants both sclera and pupil below the surrounding skin:
+the pupil must be higher than the sclera, NOT higher than the skin. For example,
+64 < 104 < 128 satisfies that preference. A recessed eye socket is therefore expected;
+judge whether the pupil's own boundary survives, not whether it protrudes from the head.
 Inspection views can use Blender Workbench cavity shading to reveal shallow detail.
 Judge the actual feature boundaries against the identically shaded control; do not
 equate a dark cavity-shading line with an open mesh crack without geometry evidence.

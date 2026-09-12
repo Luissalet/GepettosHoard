@@ -263,6 +263,9 @@ class Queue:
                         corrections=0,
                         defer_review=True,
                         target=["mTops"],
+                        scene_contract=body / "observation/contract.json"
+                        if (body / "observation/contract.json").exists()
+                        else None,
                         **resume,
                     ),
                 )

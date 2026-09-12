@@ -187,6 +187,8 @@ The central composition is an asset heading, preview toolbar and stage, lower vi
 
 Preserve the large preview and an immediately reachable correction panel when adapting this editor to another screen.
 
+Expanded scene-reading disclosures remain in the desktop inspector's scrolling content. In the phone layout they join normal page flow, with long evidence text wrapping inside the panel.
+
 ## Elevation & Depth
 
 Depth comes mainly from contrasting surface tones, fine borders and the rendered model. Shadows are restrained and structural; panels are not floating cards. The UV surface uses a dark checkerboard. The 3D stage uses a subtle perspective grid and neutral material lighting.
@@ -231,6 +233,14 @@ One framed stage contains the scene and compact controls. Original texture, numb
 ### Status and Proposal States
 
 Busy work appears in the footer, while vision jobs also show an inspector progress block. Spinners rotate over 1.4 seconds; reduced-motion preference removes animations and transitions. Proposal badges distinguish Propuesta, Aplicada and Desactualizada; stale relations and their apply button are disabled. Error banners use a warm pale surface, alert icon and dismiss action. Toasts show check-mark confirmation for five seconds. Warning and confidence copy retain their qualifications.
+
+### Saved Scene Reading
+
+“Qué entiende de la figura” presents the saved scene interpretation in the inspector before the relief proposal. Each part uses a native, initially collapsed disclosure: its name leads, followed by a muted representation label (“Volumen modelado”, “Detalle pintado”, “Geometría y pintura” or “Sin resolver”). The standard disclosure marker and keyboard interaction remain available; focus uses the existing warm outline.
+
+Opening a part reveals its appearance and location, “En la geometría original” evidence, “Objetivo de impresión”, and any physical relations with their supporting evidence. The introduction qualifies the AI interpretation as potentially needing correction and explains that the printing objective applies the user's preference to retain details in an unpainted print. Keep that objective visibly distinct from the AI's observation of the original geometry. A separate “Dudas de la interpretación” disclosure appears only when uncertainties exist, with their count in the summary.
+
+Rows use fine-line dividers and 12px vertical padding on the existing inspector surface. Summaries use 650 weight; secondary labels use muted text and 450 weight. Expanded paragraphs, evidence and uncertainty lists use the 13px body size with 1.65 line-height and wrapping for long content. Bold definition labels separate evidence from the printing objective without adding cards, new colors or extra visual elevation.
 
 ## Do's and Don'ts
 

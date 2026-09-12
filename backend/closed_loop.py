@@ -9,7 +9,6 @@ from .surface_plan import (
     uv_coverage,
     atlas_evidence,
     infer_semantics,
-    observe_figure,
     apply_plan,
     review_displacement,
     locate_regions,
@@ -338,6 +337,7 @@ def run(
     target=(),
     regenerate=False,
     defer_review=False,
+    scene_contract=None,
 ):
     out = Path(out).resolve()
     scene = out / "scene"
@@ -345,6 +345,8 @@ def run(
     if reuse:
         previous = Path(reuse)
         validate_sources(previous)
+        if scene_contract is None and (previous / "observation/contract.json").exists():
+            scene_contract = previous / "observation/contract.json"
         for filename in [
             "prepared.blend",
             "materials.json",
@@ -446,6 +448,25 @@ def run(
             if not defer_review:
                 render_control(scene, inventory)
     observation = None
+    if scene_contract is not None:
+        from .scene_understanding import apply_print_intent
+
+        supplied = (
+            json.loads(Path(scene_contract).read_text("utf-8"))
+            if isinstance(scene_contract, (str, Path))
+            else scene_contract
+        )
+        supplied = apply_print_intent(supplied)
+        observation = supplied
+        write(out / "observation/contract.json", supplied)
+        if isinstance(scene_contract, (str, Path)):
+            source_evidence = Path(scene_contract).resolve().parent
+            for filename in ["input.png", "request.json", "raw.json"]:
+                original = source_evidence / filename
+                target_evidence = out / "observation" / filename
+                if original.exists() and original != target_evidence.resolve():
+                    shutil.copy2(original, target_evidence)
+            write(out / "observation/reused.json", {"source": str(Path(scene_contract).resolve())})
     for item in inventory:
         name = item["material"]
         folder = out / "surfaces" / name
@@ -526,8 +547,14 @@ def run(
                     # The UV projection marks only this material's region IDs,
                     # while the original colors retain the surrounding anatomy.
                     annotated = reference
+                    projected = None
+                    context_mesh = inventory
                     if (scene / "context-materials.json").exists():
-                        from .region_evidence import project_regions, annotate_regions
+                        from .region_evidence import (
+                            project_regions,
+                            locate_in_view,
+                            focused_annotation,
+                        )
 
                         geometry = json.loads(
                             (
@@ -546,7 +573,8 @@ def run(
                             geometry,
                             size=(512, round(512 * reference.height / reference.width)),
                         )
-                        annotated, visible_ids = annotate_regions(reference, projected)
+                        locate_in_view(regions, projected)
+                        annotated, visible_ids = focused_annotation(reference, projected)
                         annotated.save(folder / "projected-regions.png")
                         write(folder / "projected-ids.json", visible_ids)
                     with Image.open(scene / "original-front.png") as original:
@@ -554,7 +582,16 @@ def run(
                             progress(
                                 message="La IA identifica las partes de la figura completa antes de interpretar sus UV."
                             )
-                            observation = observe_figure(model, original, out / "observation")
+                            from .scene_understanding import understand_scene
+
+                            if not all(
+                                (scene / f"control-{view}.png").exists()
+                                for view in ["front", "back"]
+                            ):
+                                render_control(scene, inventory)
+                            observation = understand_scene(
+                                model, scene, out / "observation", progress
+                            )
                         plan = infer_semantics(
                             model,
                             original,
@@ -565,12 +602,39 @@ def run(
                             observation,
                         )
                     from .semantic_audit import audit, candidates
+                    from .active_views import audit_hidden, hidden_features
+
+                    if isinstance(observation, dict) and hidden_features(regions, plan, labels):
+                        progress(
+                            message=f"Buscando otra vista de {name} para identificar detalles ocultos."
+                        )
+                        plan = audit_hidden(
+                            model,
+                            scene,
+                            item,
+                            context_mesh,
+                            labels,
+                            regions,
+                            plan,
+                            observation,
+                            folder / "active-checks",
+                        )
 
                     if candidates(labels, regions, plan):
                         progress(
                             message=f"Revisando los detalles de {name} que podrían haberse unido a otra superficie."
                         )
-                        plan = audit(model, work, labels, regions, plan, folder / "focused-checks")
+                        plan = audit(
+                            model,
+                            work,
+                            labels,
+                            regions,
+                            plan,
+                            folder / "focused-checks",
+                            scene_context=observation,
+                            model_reference=reference,
+                            projected=projected,
+                        )
                         write(folder / "plan-with-checks.json", plan)
             regions = apply_plan(regions, plan)
             for group, surface in enumerate(plan["surfaces"]):
@@ -803,6 +867,7 @@ def run(
         "maps": maps,
         "metrics": metrics,
         "plans": plans,
+        "sceneUnderstanding": observation,
         "model": model,
         "status": "needs_review",
         "hasDetails": bool(focus) and not defer_review,

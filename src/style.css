@@ -51,7 +51,8 @@ a {
 button:focus-visible,
 a:focus-visible,
 input:focus-visible,
-select:focus-visible {
+select:focus-visible,
+.scene-reading summary:focus-visible {
   outline: 2px solid var(--focus);
   outline-offset: 3px;
 }
@@ -973,6 +974,35 @@ svg {
 }
 .inspector-section > .wide {
   margin-top: 17px;
+}
+.scene-reading details {
+  border-bottom: 1px solid var(--line);
+  padding: 12px 0;
+}
+.scene-reading summary {
+  cursor: pointer;
+  font-weight: 650;
+  line-height: 1.6;
+}
+.scene-reading summary small {
+  display: block;
+  margin-left: 15px;
+  color: var(--muted);
+  font-weight: 450;
+}
+.scene-reading details p,
+.scene-reading dl,
+.scene-reading ul {
+  font-size: 13px;
+  line-height: 1.65;
+  overflow-wrap: anywhere;
+}
+.scene-reading dt {
+  margin-top: 12px;
+  font-weight: 700;
+}
+.scene-reading dd {
+  margin: 4px 0 0;
 }
 .reasoning-empty {
   text-align: center;

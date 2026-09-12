@@ -61,6 +61,9 @@ def assemble(body, garment, out, progress, automatic=False):
         corrections=1 if automatic else 0,
         reuse=seed,
         overrides=None if automatic else plans,
+        scene_contract=body / "observation/contract.json"
+        if (body / "observation/contract.json").exists()
+        else None,
     )
     result["components"] = {
         "body": str(body),

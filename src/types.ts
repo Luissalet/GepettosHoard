@@ -12,6 +12,25 @@ export type Region = {
   geometry: 'painted' | 'modeled' | 'unknown';
   semanticGroup?: string;
   heightGroup?: string;
+  scenePart?: string | null;
+};
+export type SceneUnderstanding = {
+  parts: {
+    key: string;
+    name: string;
+    appearance: string;
+    location: string;
+    representation: 'modeled' | 'painted' | 'mixed' | 'uncertain';
+    controlEvidence: string;
+    printRequirement: string;
+  }[];
+  relations: {
+    part: string;
+    reference: string;
+    relation: 'covers' | 'inside' | 'borders' | 'continues' | 'separate';
+    evidence: string;
+  }[];
+  uncertainties: string[];
 };
 export type Asset = {
   id: string;
@@ -57,6 +76,7 @@ export type Project = {
     targetMaterials?: string[];
     revision: number;
     review: { assessment: string; issues: string[] };
+    sceneUnderstanding?: SceneUnderstanding | null;
   };
 };
 export type ImageMode = 'original' | 'ids' | 'color' | 'height';

@@ -112,6 +112,7 @@ def constrain(out, plans, apply=True):
             height=exemplar["height"],
             name=exemplar["name"],
             role=exemplar.get("role", "unspecified"),
+            scenePart=exemplar.get("scenePart"),
             semanticSource=exemplar.get("semanticSource", "initial-recognition"),
             reason="Continuidad de la misma superficie en un borde UV compartido.",
             heightGroup="continued-" + hashlib.sha256(json.dumps(target).encode()).hexdigest()[:10],

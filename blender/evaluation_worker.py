@@ -173,6 +173,7 @@ def render_views(objects, prefix, clay=True, front_only=False, focus=None):
     else:
         bpy.context.view_layer.material_override = None
     angles = [("front", (0, -2, 0.27)), ("three-quarter", (1, -1.65, 0.4)), ("back", (0, 2, 0.25))]
+    angles = config.get("view_offsets", angles)
     for label, offset in angles[:1] if front_only else angles:
         camera.location = center + Vector(offset) * size
         camera.rotation_euler = (center - camera.location).to_track_quat("-Z", "Y").to_euler()

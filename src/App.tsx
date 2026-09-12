@@ -27,6 +27,7 @@ import EvaluationPanel from './EvaluationPanel';
 import EvaluationViewport from './EvaluationViewport';
 import ProjectControls from './ProjectControls';
 import OperationsPanel from './OperationsPanel';
+import SceneReading from './SceneReading';
 import type { ViewportHandle } from './Viewport';
 import { api, imageUrl, PALETTE } from './types';
 import type { Asset, ImageMode, Project, Region, Relation, Surface } from './types';
@@ -1108,6 +1109,9 @@ export default function App() {
                     <span>El tiempo depende del modelo y la GPU.</span>
                   </section>
                 )}
+                {project?.evaluation?.sceneUnderstanding && (
+                  <SceneReading scene={project.evaluation.sceneUnderstanding} />
+                )}
                 {project?.proposal ? (
                   <>
                     <section className="inspector-section">
@@ -1195,7 +1199,8 @@ export default function App() {
                     )}
                   </>
                 ) : (
-                  !working && (
+                  !working &&
+                  !project?.evaluation?.sceneUnderstanding && (
                     <section className="inspector-section reasoning-empty">
                       <div className="layer-example">
                         <span>Hebilla</span>

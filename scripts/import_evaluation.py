@@ -11,6 +11,10 @@ from backend import app as server
 def import_run(source, blend, glb=None, name=None, project_id=None):
     source = Path(source).resolve()
     result = json.loads((source / "result.json").read_text("utf-8"))
+    if result.get("sceneUnderstanding"):
+        from backend.scene_understanding import apply_print_intent
+
+        result["sceneUnderstanding"] = apply_print_intent(result["sceneUnderstanding"])
     title = name or Path(blend).stem.replace("-original-copy", "") + " · relieve con Figure Tools"
     p = server.read(project_id) if project_id else server.create(server.NewProject(name=title))
     pid = p["id"]
@@ -71,6 +75,7 @@ def import_run(source, blend, glb=None, name=None, project_id=None):
         "targetMaterials": result.get("targetMaterials", []),
         "hasDetails": result.get("hasDetails", False),
         "aiAcceptable": result["aiAcceptable"],
+        "sceneUnderstanding": result.get("sceneUnderstanding"),
         "revision": p["revision"],
         "review": result.get("selectedReview", result["iterations"][-1]["review"]),
     }

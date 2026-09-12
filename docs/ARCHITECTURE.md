@@ -33,3 +33,24 @@ The queue is a persistent single consumer with immutable phase paths. Recovery m
 ## Boundaries
 
 The current complete-figure recipe recognizes the demonstrated `mTops` clothing convention. Arbitrary rig/material layouts and Pokémon Masters have not yet received equivalent end-to-end validation. All game assets, model weights, generated evaluations and local histories stay outside the public repository. Faustus informed operational design; its AGPL server code was not incorporated.
+
+
+## Scene reasoning under evaluation
+
+A new scene contract compares original and uniform-control views from the front and back before classifying UV regions. It records observed pieces, appearance, location, visible counts, modeled versus painted evidence, and relations such as covers, inside and continues. Keys and relation references are validated; the contract never assigns numeric heights. Models advertising Ollama's thinking capability can reason during this scene stage. The UV assignment stage uses the contract and actual projected image locations, links each group to an observed part, and retains the deterministic artist style. Hidden regions receive no invented screen position.
+
+The contract is a hypothesis grounded in images, not ground truth. Its errors remain possible and downstream image evidence takes precedence. Separate focused checks receive both the UV crop and the selected region IDs on the original model. Complete-figure batches reuse the body's scene contract for clothing. Current trials separate cached preparation from new semantic inference; no benchmark claim should treat reuse of a prepared scene as a cold start.
+
+
+When a specific feature or a conspicuous color outlier is hidden in the mapping view, seven geometry projections score where it is actually visible. The worker renders an original and a uniform control from the selected angle and asks for a short grounded identification, with the front view retained for orientation. This separates missing visual evidence from the amount of reasoning used. The stage is bounded per material; unavailable views and incomplete model answers remain recorded rather than being presented as successful verification.
+
+
+Printing intent is not delegated to perception. A model may correctly see a painted freckle and still suggest leaving it flat for later painting. `apply_print_intent` retains the observed classification and geometric evidence, but derives the printing requirement from the user's unpainted-figure objective. Raw model responses remain in the evidence directory. The editor presents the observation and this printing objective separately in native per-part disclosures, persisted with the evaluation.
+
+Focused checks preserve both attempts when a thinking response runs out of output. One compact retry sees the same images; if that also truncates, the previous heights survive and the unresolved inspection is recorded as a warning. This bounded recovery does not certify the semantic decision.
+
+
+Active inspections operate only on IDs visible in the chosen camera. Other IDs retain their previous values. Spatially distant patches of one color are separated before requesting a single identity; mirrored locations may share evidence, while different levels and depths are inspected separately. This partition uses normalized mesh bounds and never assigns semantic roles or heights itself.
+
+
+Extended thinking is reserved for whole-scene interpretation and ambiguous color checks. Active physical-view checks default to a compact decision after identical-input ablations preserved useful part identities and heights at substantially lower latency; an explicit reasoning parameter remains for experiments. Color-check ablations changed a sucker center into a rim, so that stage retains the more deliberate default.
