@@ -4,7 +4,7 @@ import httpx
 
 ROOT = Path(__file__).resolve().parents[1]
 base = Path(r"E:\Modelos\Animal Crossing\ACNH_2.0.0\Characters\Zucker\upscaled_chain")
-with httpx.Client(base_url="http://127.0.0.1:8766/api", timeout=180, trust_env=False) as client:
+with httpx.Client(base_url="http://127.0.0.1:8767/api", timeout=180, trust_env=False) as client:
     response = client.post("/projects", json={"name": "Zucker · validación 4K / 8K"})
     response.raise_for_status()
     p = response.json()

@@ -39,7 +39,7 @@ npm run build
 .venv\Scripts\python start.py
 ```
 
-After installation, use **Abrir Sculptors Hoard.cmd**. The application opens at `http://127.0.0.1:8766`. Set `SCULPTORS_HOARD_BLENDER` if Blender is installed elsewhere.
+After installation, use **Abrir Sculptors Hoard.cmd**. The application opens at `http://127.0.0.1:8767`. Port 8766 is reserved for Writer’s Hoard’s AI/MCP bridge; Sculptor’s Hoard does not provide that MCP service. Set `SCULPTORS_HOARD_BLENDER` if Blender is installed elsewhere.
 
 1. In **Equipo y lotes**, choose an installed vision model and check its real memory state.
 2. Scan a folder of `.blend` scenes, select figures and enqueue a preparation. The current complete-figure recipe separates clothing named `mTops`; other material selections are available in the single-figure workflow.

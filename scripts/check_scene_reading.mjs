@@ -16,7 +16,7 @@ for (const [name, viewport] of [
 ]) {
   const page = await browser.newPage({ viewport });
   page.on('pageerror', (e) => errors.push(e.message));
-  await page.goto('http://127.0.0.1:8766/?project=f78d90a8e7ab');
+  await page.goto('http://127.0.0.1:8767/?project=f78d90a8e7ab');
   await page.getByRole('button', { name: 'Interpretación', exact: true }).click();
   const section = page.getByRole('region', { name: 'Lectura de la geometría' });
   await section.getByRole('heading', { name: 'Qué entiende de la figura' }).waitFor();

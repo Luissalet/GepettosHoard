@@ -16,7 +16,7 @@ for (const [name, size, project, detail] of [
 ]) {
   const page = await browser.newPage({ viewport: size });
   page.on('pageerror', (e) => errors.push(e.message));
-  await page.goto(`http://127.0.0.1:8766/?project=${project}`);
+  await page.goto(`http://127.0.0.1:8767/?project=${project}`);
   await page.getByRole('button', { name: 'Relieve real', exact: true }).click();
   await page.waitForFunction(
     () =>

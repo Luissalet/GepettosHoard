@@ -18,7 +18,7 @@ views = [
     }
     for i, label in enumerate(saved["inventory"]["view_order"])
 ]
-with httpx.Client(base_url="http://127.0.0.1:8766/api", trust_env=False, timeout=30) as client:
+with httpx.Client(base_url="http://127.0.0.1:8767/api", trust_env=False, timeout=30) as client:
     response = client.post(
         f"/projects/{pid}/analyze",
         json={"model": saved["model"], "views": views, "meshes": saved["meshes"]},

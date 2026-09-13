@@ -28,7 +28,7 @@ const sent = JSON.parse(
 ).project;
 const results = [];
 for (const pid of [sent, primary]) {
-  await page.goto(`http://127.0.0.1:8766/?project=${pid}`);
+  await page.goto(`http://127.0.0.1:8767/?project=${pid}`);
   await page.waitForFunction(
     () => /superficies|No se pudo/.test(document.querySelector('.view-status')?.textContent || ''),
     null,

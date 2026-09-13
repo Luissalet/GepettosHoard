@@ -103,7 +103,13 @@ def load_masks(pid, aid):
 
 @app.get("/api/health")
 def health():
-    return {"ok": True, "version": "0.1.0", "palette": PALETTE}
+    return {
+        "ok": True,
+        "application": "sculptors-hoard",
+        "name": "Sculptor’s Hoard",
+        "version": "0.1.0",
+        "palette": PALETTE,
+    }
 
 
 @app.get("/api/models")

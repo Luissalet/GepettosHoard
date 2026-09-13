@@ -4,7 +4,7 @@ import httpx
 
 ROOT = Path(__file__).resolve().parents[1]
 pid = json.loads((ROOT / "data/validation/project.json").read_text())["id"]
-with httpx.Client(base_url="http://127.0.0.1:8766/api", timeout=240, trust_env=False) as client:
+with httpx.Client(base_url="http://127.0.0.1:8767/api", timeout=240, trust_env=False) as client:
     p = client.get(f"/projects/{pid}").json()
     r = client.post(f"/projects/{pid}/apply", json={"relations": p["proposal"]["relations"]})
     r.raise_for_status()

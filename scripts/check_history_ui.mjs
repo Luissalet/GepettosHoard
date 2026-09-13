@@ -11,10 +11,10 @@ const executablePath = fs
 const browser = await chromium.launch({ headless: true, executablePath });
 const page = await browser.newPage();
 const project = JSON.parse(fs.readFileSync('data/operations-validation/ui-project.json', 'utf8'));
-const base = `http://127.0.0.1:8766/api/projects/${project.id}`;
+const base = `http://127.0.0.1:8767/api/projects/${project.id}`;
 const errors = [];
 page.on('pageerror', (e) => errors.push(e.message));
-await page.goto(`http://127.0.0.1:8766/?project=${project.id}`);
+await page.goto(`http://127.0.0.1:8767/?project=${project.id}`);
 await page.getByText('Guardar y versiones', { exact: true }).click();
 await page
   .getByLabel('Nombre del proyecto', { exact: true })

@@ -16,7 +16,7 @@ for (const [label, viewport] of [
 ]) {
   const page = await browser.newPage({ viewport });
   page.on('pageerror', (e) => errors.push(e.message));
-  await page.goto('http://127.0.0.1:8766/?project=f78d90a8e7ab');
+  await page.goto('http://127.0.0.1:8767/?project=f78d90a8e7ab');
   await page.getByRole('button', { name: 'Equipo y lotes', exact: true }).click();
   await page.locator('.gpu-row').first().waitFor();
   await page.waitForFunction(

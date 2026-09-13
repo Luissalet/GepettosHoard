@@ -23,7 +23,7 @@ import uuid
 import webbrowser
 import zipfile
 
-API = "http://127.0.0.1:8766/api"
+API = "http://127.0.0.1:8767/api"
 
 
 def request(path, data=None, content_type="application/json"):
@@ -284,7 +284,7 @@ class RELIEF_OT_send(bpy.types.Operator):
                 result = upload(p["id"], [snapshot, path, *files.values()])
                 if result.get("errors"):
                     raise RuntimeError("; ".join(result["errors"]))
-                webbrowser.open("http://127.0.0.1:8766/?project=" + p["id"])
+                webbrowser.open("http://127.0.0.1:8767/?project=" + p["id"])
             self.report({"INFO"}, "Modelo y texturas enviados. Los originales se conservan.")
             return {"FINISHED"}
         except Exception as e:
@@ -356,7 +356,7 @@ class RELIEF_PT_panel(bpy.types.Panel):
         layout.operator("relief.send_scene", icon="EXPORT")
         layout.separator()
         layout.operator("relief.import_maps", icon="IMPORT")
-        layout.label(text="Servidor local: puerto 8766", icon="INFO")
+        layout.label(text="Servidor local: puerto 8767", icon="INFO")
 
 
 CLASSES = [RELIEF_OT_send, RELIEF_OT_import, RELIEF_PT_panel]
