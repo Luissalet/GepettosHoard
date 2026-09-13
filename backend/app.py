@@ -232,6 +232,27 @@ async def upload(pid: str, files: list[UploadFile] = File(...)):
     # CPU/file operations execute outside the event loop.
     from starlette.concurrency import run_in_threadpool
 
+    blends = [f for f in files if (f.filename or "").lower().endswith(".blend")]
+    # The Blender add-on already sends a prepared GLB + native images together
+    # with its snapshot. Direct .blend imports are expanded here instead.
+    prepared_bundle = any((f.filename or "").lower().endswith(".glb") for f in files)
+    if blends and not prepared_bundle:
+        if len(blends) != 1:
+            raise HTTPException(
+                400, "Elige un solo proyecto .blend para abrir su escena y texturas aplicadas."
+            )
+        content = await blends[0].read(160 * 1024 * 1024 + 1)
+        if len(content) > 160 * 1024 * 1024:
+            raise HTTPException(
+                400, "El .blend supera 160 MB. Envíalo desde el complemento de Blender."
+            )
+        from .blend_import import import_blend
+
+        project = await run_in_threadpool(
+            import_blend, sys.modules[__name__], pid, blends[0].filename, content
+        )
+        return {"project": project, "errors": [], "warnings": project["blendImport"]["warnings"]}
+
     for file in files:
         content = await file.read(160 * 1024 * 1024 + 1)
         if len(content) > 160 * 1024 * 1024:
@@ -242,6 +263,57 @@ async def upload(pid: str, files: list[UploadFile] = File(...)):
         except HTTPException as e:
             errors.append(str(e.detail))
     return {"project": read(pid), "errors": errors}
+
+
+@app.post("/api/projects/{pid}/import-blender")
+def expand_saved_blender(pid: str):
+    from .blend_import import import_blend
+
+    p = read(pid)
+    if not p.get("blenderSource"):
+        raise HTTPException(400, "Añade un proyecto .blend primero.")
+    source = p["blenderSource"]
+    return import_blend(
+        sys.modules[__name__],
+        pid,
+        source["name"],
+        (folder(pid) / "sources" / source["file"]).read_bytes(),
+    )
+
+
+class BlenderPathRequest(BaseModel):
+    path: str = Field(min_length=1, max_length=2000)
+
+
+class DesktopRequest(BaseModel):
+    project: str | None = None
+
+
+@app.post("/api/desktop/open")
+def open_desktop(body: DesktopRequest):
+    if body.project:
+        folder(body.project)
+    from start import launch_desktop
+
+    try:
+        launch_desktop(body.project)
+    except (RuntimeError, OSError) as error:
+        raise HTTPException(400, str(error))
+    return {"ok": True}
+
+
+@app.post("/api/projects/{pid}/import-blender-path")
+def import_blender_path(pid: str, body: BlenderPathRequest):
+    from .blend_import import import_blend
+
+    path = Path(body.path).resolve()
+    if not path.is_file() or path.suffix.lower() != ".blend":
+        raise HTTPException(400, "Selecciona un archivo .blend existente.")
+    if path.stat().st_size > 160 * 1024 * 1024:
+        raise HTTPException(
+            400, "El archivo supera 160 MB. Envíalo desde el complemento de Blender."
+        )
+    return import_blend(sys.modules[__name__], pid, path.name, path.read_bytes(), source_path=path)
 
 
 @app.post("/api/demo")

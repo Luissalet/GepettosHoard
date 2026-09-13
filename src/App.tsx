@@ -156,6 +156,7 @@ export default function App() {
   const [job, setJob] = useState<Job | null>(null);
   const [uvLines, setUvLines] = useState<number[][]>([]);
   const input = useRef<HTMLInputElement>(null);
+  const blendInput = useRef<HTMLInputElement>(null);
   const folderInput = useRef<HTMLInputElement>(null);
   const viewer = useRef<ViewportHandle>(null);
   const editor = useRef<HTMLElement>(null);
@@ -173,6 +174,9 @@ export default function App() {
     latest.current = p;
     setProject(p);
     localStorage.setItem('relief-project', p.id);
+    const url = new URL(location.href);
+    url.searchParams.set('project', p.id);
+    history.replaceState(null, '', url);
     setActiveId((id) => (p.assets.some((a) => a.id === id) ? id : (p.assets[0]?.id ?? null)));
   }
   async function refreshProjects() {
@@ -268,35 +272,110 @@ export default function App() {
     }
   }
   async function importFiles(files: File[]) {
-    const supported = files.filter(
-      (f) =>
-        /\.(png|jpe?g|webp|tga|bmp|dae|glb|blend)$/i.test(f.name) &&
-        !/(^|\/)upscaled_chain\/|(^|\/)baked\//i.test(f.webkitRelativePath),
-    );
+    const blends = files.filter((f) => /\.blend$/i.test(f.name));
+    if (blends.length > 1) {
+      setError('Elige un solo .blend. Se abrirá la escena con sus texturas aplicadas.');
+      return;
+    }
+    const supported = blends.length
+      ? blends
+      : files.filter(
+          (f) =>
+            /\.(png|jpe?g|webp|tga|bmp|dae|glb|blend)$/i.test(f.name) &&
+            !/(^|\/)upscaled_chain\/|(^|\/)baked\//i.test(f.webkitRelativePath),
+        );
     if (!supported.length) {
       setError(
         'Importa DAE o GLB junto con sus texturas PNG, JPG, WebP o TGA. Para evaluar con Figure Tools, añade también una copia .blend con texturas empaquetadas o rutas absolutas.',
       );
       return;
     }
-    await run(`Importando ${supported.length} archivos…`, async () => {
-      let p = latest.current;
-      if (!p) {
-        const name =
-          supported[0].webkitRelativePath.split('/')[0] ||
-          supported[0].name.replace(/\.[^.]+$/, '');
-        p = await api<Project>('/projects', { method: 'POST', body: JSON.stringify({ name }) });
-      }
-      const form = new FormData();
-      supported.forEach((f) => form.append('files', f));
-      const result = await api<{ project: Project; errors: string[] }>(`/projects/${p.id}/import`, {
+    await run(
+      blends.length
+        ? 'Abriendo escena Blender y texturas aplicadas…'
+        : `Importando ${supported.length} archivos…`,
+      async () => {
+        let p = latest.current;
+        if (!p) {
+          const name =
+            supported[0].webkitRelativePath.split('/')[0] ||
+            supported[0].name.replace(/\.[^.]+$/, '');
+          p = await api<Project>('/projects', { method: 'POST', body: JSON.stringify({ name }) });
+        }
+        const form = new FormData();
+        supported.forEach((f) => form.append('files', f));
+        const result = await api<{ project: Project; errors: string[] }>(
+          `/projects/${p.id}/import`,
+          {
+            method: 'POST',
+            body: form,
+          },
+        );
+        accept(result.project);
+        if (result.errors.length) setError(result.errors.join(' · '));
+        setSurface(result.project.models.length ? 'model' : 'uv');
+        setMode('original');
+        setToast(
+          blends.length
+            ? `Escena Blender abierta · ${result.project.assets.length} texturas a resolución original`
+            : `${result.project.assets.length} texturas en el proyecto`,
+        );
+        await refreshProjects();
+      },
+    );
+  }
+  async function newProject() {
+    await run('Creando proyecto vacío…', async () => {
+      await pendingEdit.current;
+      const p = await api<Project>('/projects', {
         method: 'POST',
-        body: form,
+        body: JSON.stringify({ name: 'Sin título' }),
       });
-      accept(result.project);
-      if (result.errors.length) setError(result.errors.join(' · '));
-      setSurface(result.project.models.length ? 'model' : 'uv');
-      setToast(`${result.project.assets.length} texturas en el proyecto`);
+      accept(p);
+      setActiveId(null);
+      setSelected(null);
+      setJob(null);
+      setRelations([]);
+      setUvLines([]);
+      setMode('original');
+      setSurface('model');
+      setTab('regions');
+      setWire(false);
+      setStrength(1);
+      setProjectFilter('');
+      setStatus('Abre un proyecto Blender para empezar.');
+      setToast('Proyecto vacío. El anterior sigue en Proyectos guardados.');
+      await refreshProjects();
+    });
+  }
+  async function openBlender() {
+    if (!window.sculptorsHoardDesktop) {
+      blendInput.current?.click();
+      return;
+    }
+    await run('Abriendo escena Blender y texturas aplicadas…', async () => {
+      const path = await window.sculptorsHoardDesktop!.pickBlend();
+      if (!path) return;
+      let p = latest.current;
+      if (!p)
+        p = await api<Project>('/projects', {
+          method: 'POST',
+          body: JSON.stringify({
+            name: path
+              .replaceAll('\\', '/')
+              .split('/')
+              .pop()!
+              .replace(/\.blend$/i, ''),
+          }),
+        });
+      const result = await api<Project>(`/projects/${p.id}/import-blender-path`, {
+        method: 'POST',
+        body: JSON.stringify({ path }),
+      });
+      accept(result);
+      setSurface('model');
+      setMode('original');
+      setToast(`Escena Blender abierta · ${result.assets.length} texturas a resolución original`);
       await refreshProjects();
     });
   }
@@ -430,6 +509,16 @@ export default function App() {
       }}
     >
       <input
+        ref={blendInput}
+        type="file"
+        accept=".blend"
+        hidden
+        onChange={(e) => {
+          void importFiles(Array.from(e.target.files ?? []));
+          e.target.value = '';
+        }}
+      />
+      <input
         ref={input}
         type="file"
         multiple
@@ -512,32 +601,27 @@ export default function App() {
         <aside className={`library ${rail ? 'visible' : ''}`}>
           <div className="panel-heading">
             <h2>Biblioteca</h2>
-            <button
-              className="icon-button"
-              title="Nuevo proyecto"
-              aria-label="Nuevo proyecto"
-              disabled={working}
-              onClick={() => {
-                setProject(null);
-                setActiveId(null);
-                setSelected(null);
-                setJob(null);
-                localStorage.removeItem('relief-project');
-              }}
-            >
-              <Plus size={18} />
-            </button>
           </div>
           <button
-            className="import-button"
+            className="button secondary wide"
+            disabled={working}
+            onClick={() => void newProject()}
+          >
+            <Plus size={18} /> Nuevo proyecto
+          </button>
+          <button className="import-button" disabled={working} onClick={() => void openBlender()}>
+            <FolderOpen size={20} />
+            <span>
+              Abrir proyecto Blender<small>Modelo, ropa y texturas aplicadas</small>
+            </span>
+            <Plus size={15} />
+          </button>
+          <button
+            className="text-button file-import"
             disabled={working}
             onClick={() => folderInput.current?.click()}
           >
-            <FolderOpen size={20} />
-            <span>
-              Importar carpeta<small>Modelo y texturas originales</small>
-            </span>
-            <Plus size={15} />
+            <FolderOpen size={14} /> Importar carpeta
           </button>
           <button
             className="text-button file-import"
@@ -545,7 +629,7 @@ export default function App() {
             onClick={() => input.current?.click()}
           >
             <UploadSimple size={14} />
-            Elegir archivos
+            Añadir DAE o texturas
           </button>
           {project && (
             <>
@@ -571,7 +655,9 @@ export default function App() {
                     </button>
                   ))
                 ) : (
-                  <p className="muted small">Añade un DAE o GLB para interpretar el modelo.</p>
+                  <p className="muted small">
+                    Abre un proyecto Blender para ver el modelo y su ropa.
+                  </p>
                 )}
               </div>
               <div className="group-heading">

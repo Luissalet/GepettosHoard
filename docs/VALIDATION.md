@@ -1,5 +1,15 @@
 # Validación local · 12 de septiembre de 2026
 
+## Ampliación · 13 de septiembre: Blender y escritorio
+
+Keaton se importó desde su `Untitled.blend`, con la malla visible que incluye la ropa y las cuatro imágenes realmente aplicadas de `upscaled_chain`: cuerpo 8192², ojos 4096×2048, pico 4096² y camiseta 5120². La importación completa por API tardó 7,14 s (4,09 s en la extracción de Blender). Son tiempos de importación, sin inferencia ni preparación de alturas. Se inspeccionó la figura completa en pantalla y se verificaron las dimensiones nativas.
+
+La aplicación de escritorio se probó con Electron real: arranque automático del servicio, ventana propia, selector nativo conectado a la importación y recuperación del modelo con ropa. La elección del archivo en el diálogo se automatizó con una ruta conocida. Se comprobó Nuevo proyecto, recarga y apertura posterior de otro `.blend`; el proyecto vacío no recupera por accidente los modelos del anterior. También se verificó el flujo de navegador a 1440 px y 390 px, sin errores JavaScript ni desbordamiento horizontal.
+
+Dos escenas sintéticas adicionales probaron rutas relativas mediante el selector de escritorio e imágenes empaquetadas mediante subida de archivo. Ambos archivos fuente conservaron su hash. Las cuatro copias nativas de Keaton son idénticas byte a byte a las imágenes aplicadas originales. El lanzador `.vbs` de la carpeta y la reutilización de una única ventana se ejecutaron en Windows.
+
+Las 86 pruebas Python pasan, incluida la importación transaccional, deshacer, conservación del proyecto ante una textura ausente, conflictos de edición y prioridad del `.blend` sobre archivos antiguos sueltos. La compilación de producción pasa. Estas comprobaciones validan apertura, resolución de recursos y navegación; no aprueban la calidad semántica de los heightmaps de Keaton.
+
 ## Alcance
 
 Se utilizó Zucker, un aldeano con `.blend` y sin STL en su carpeta al seleccionar el caso. El archivo original se abrió en Blender y se guardó una copia de trabajo bajo `data/validation/`. Todas las modificaciones y el STL de prueba se guardaron allí. No se ejecutaron escrituras sobre el archivo fuente.

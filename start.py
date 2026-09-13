@@ -1,6 +1,6 @@
 """Double-click launcher for the built local application."""
 
-import json, subprocess, sys, time, urllib.request, webbrowser
+import json, os, subprocess, sys, time, urllib.request, webbrowser
 from pathlib import Path
 
 ROOT = Path(__file__).resolve().parent
@@ -15,7 +15,7 @@ def running():
         return False
 
 
-def main():
+def ensure_server():
     if not running():
         if not (ROOT / "dist/index.html").exists():
             raise SystemExit("Falta compilar la interfaz. Ejecuta: npm ci y npm run build.")
@@ -49,7 +49,36 @@ def main():
             raise SystemExit(
                 "No se pudo iniciar Sculptor’s Hoard. Consulta logs/server.log y las instrucciones de instalación."
             )
-    webbrowser.open("http://127.0.0.1:8767")
+
+
+def launch_desktop(project=None):
+    executable = (
+        ROOT
+        / "node_modules/electron/dist"
+        / ("electron.exe" if sys.platform == "win32" else "electron")
+    )
+    if not executable.is_file():
+        raise RuntimeError(
+            "Falta el entorno de escritorio. Ejecuta npm ci en la carpeta del programa."
+        )
+    args = [str(executable), str(ROOT / "desktop/main.cjs")]
+    if project:
+        args.append("--project=" + project)
+    env = os.environ.copy()
+    env.pop("ELECTRON_RUN_AS_NODE", None)
+    return subprocess.Popen(
+        args, cwd=ROOT, env=env, creationflags=getattr(subprocess, "CREATE_NO_WINDOW", 0)
+    )
+
+
+def main():
+    if "--server-only" in sys.argv:
+        ensure_server()
+    elif "--web" in sys.argv:
+        ensure_server()
+        webbrowser.open("http://127.0.0.1:8767")
+    else:
+        launch_desktop()
 
 
 if __name__ == "__main__":

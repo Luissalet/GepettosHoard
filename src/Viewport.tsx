@@ -506,20 +506,35 @@ export default forwardRef<ViewportHandle, Props>(function Viewport(props, ref) {
     e.loaded = false;
     disposeObject(e.root);
     e.root.clear();
+    e.root.position.set(0, 0, 0);
     if (!p?.models.length) {
+      current.current.onStatus('Abre un proyecto Blender para ver su modelo y texturas aplicadas.');
       e.render();
       return;
     }
     current.current.onStatus('Abriendo modelo…');
     const manager = new THREE.LoadingManager();
     const pending = new Map<string, THREE.Texture>();
+    // A missing file must not become an uninitialized alpha texture: alphaTest
+    // would discard every fragment and make an otherwise valid mesh disappear.
+    const missingImages = new Set<string>();
+    const neutralImage =
+      'data:image/svg+xml,' +
+      encodeURIComponent(
+        '<svg xmlns="http://www.w3.org/2000/svg" width="1" height="1"><path fill="white" d="M0 0h1v1H0z"/></svg>',
+      );
     manager.setURLModifier((url) => {
+      if (/^(data:|blob:)/i.test(url)) return url;
       const name = basename(url);
       const a = p.assets.find((a) => a.name.toLowerCase() === name);
-      return a ? imageUrl(p, a, 'original') : url;
+      if (a) return imageUrl(p, a, 'original');
+      if (/\.(png|jpe?g|webp|tga|bmp)$/i.test(name)) {
+        missingImages.add(name);
+        return neutralImage;
+      }
+      return url;
     });
-    manager.onError = (url) =>
-      current.current.onStatus(`Textura sin resolver: ${basename(url)}. Importa su PNG.`);
+    manager.onError = (url) => missingImages.add(basename(url));
     async function load() {
       const loaded: THREE.Object3D[] = [];
       for (const m of p!.models) {
@@ -558,6 +573,9 @@ export default forwardRef<ViewportHandle, Props>(function Viewport(props, ref) {
             let matches = p!.assets.filter(
               (a) => src.includes(`/assets/${a.id}/`) || basename(src) === a.name.toLowerCase(),
             );
+            const assignedMaterial = previous.userData.sculptorsHoardMaterial;
+            if (assignedMaterial)
+              matches = p!.assets.filter((a) => a.material === assignedMaterial);
             if (!matches.length && previous.map?.name)
               matches = p!.assets.filter(
                 (a) => textureStem(previous.map!.name) === textureStem(a.name),
@@ -567,8 +585,11 @@ export default forwardRef<ViewportHandle, Props>(function Viewport(props, ref) {
             const a = matches.length === 1 ? matches[0] : undefined;
             const mat = new THREE.MeshStandardMaterial({
               name: old.name,
-              map: a ? pending.get(a.id) : (previous.map ?? null),
-              color: previous.color ?? new THREE.Color(0xd8d5cb),
+              map: a ? pending.get(a.id) : previous.map?.image ? previous.map : null,
+              color:
+                a || previous.map?.image
+                  ? (previous.color ?? new THREE.Color(0xffffff))
+                  : new THREE.Color(0xd8d5cb),
               roughness: 0.8,
               metalness: 0,
               side: THREE.DoubleSide,
@@ -607,7 +628,7 @@ export default forwardRef<ViewportHandle, Props>(function Viewport(props, ref) {
       const missing = rows.filter((m) => !m.texture).length;
       current.current.onStatus(
         missing
-          ? `${rows.length} superficies · ${missing} sin textura vinculada`
+          ? `${rows.length} superficies visibles · ${missing} sin textura vinculada. Importa la carpeta del modelo con sus imágenes.`
           : `${rows.length} superficies · UV vinculadas`,
       );
     }

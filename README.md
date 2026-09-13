@@ -39,7 +39,13 @@ npm run build
 .venv\Scripts\python start.py
 ```
 
-After installation, use **Abrir Sculptors Hoard.cmd**. The application opens at `http://127.0.0.1:8767`. Port 8766 is reserved for Writer’s Hoard’s AI/MCP bridge; Sculptor’s Hoard does not provide that MCP service. Set `SCULPTORS_HOARD_BLENDER` if Blender is installed elsewhere.
+After installation, double-click **Abrir Sculptors Hoard.vbs** in the project folder (Windows, without a console). **Abrir Sculptors Hoard.cmd** and `npm run desktop` also work. The application opens in its own desktop window, with a native Blender file picker. It starts its local processing service automatically; closing the window leaves that service running so queued work can continue. Set `SCULPTORS_HOARD_BLENDER` if Blender is installed elsewhere. If your npm configuration disables install scripts, run `node node_modules/electron/install.js` once to install the desktop runtime.
+
+Use **Nuevo proyecto → Abrir proyecto Blender** to begin. The `.blend` is authoritative: the importer takes its visible meshes, clothing, current pose, material assignments and the exact applied images, including `upscaled_chain` textures. Original images retain their native resolution; only the interactive preview is reduced to 1536 px. The source scene is never overwritten. Import is undoable and a failed import leaves the current project intact.
+
+The desktop picker preserves the original file location, so Blender can resolve relative texture paths. For browser uploads, use packed images or absolute paths. Missing applied images produce an error instead of silently substituting older textures. Materials combining several color images and UDIM textures currently require baking first. **Nuevo proyecto** clears the workspace and keeps the previous project in the saved library, including after reopening the application.
+
+Optional browser mode: `python start.py --web`. The local service uses `http://127.0.0.1:8767`; `python start.py --server-only` runs it without opening a window. Port 8766 belongs to Writer’s Hoard’s AI/MCP bridge. Sculptor’s Hoard does not provide that MCP service.
 
 1. In **Equipo y lotes**, choose an installed vision model and check its real memory state.
 2. Scan a folder of `.blend` scenes, select figures and enqueue a preparation. The current complete-figure recipe separates clothing named `mTops`; other material selections are available in the single-figure workflow.
@@ -74,7 +80,7 @@ Vision models still make semantic mistakes, and their own approval can be wrong.
 
 ## Engineering
 
-React, TypeScript and Three.js for the workspace; FastAPI, NumPy, SciPy and scikit-learn for processing; Ollama for local vision/language; Blender as the geometry evaluation engine; SQLite WAL for history and production queues.
+Electron for the desktop window and native file picker; React, TypeScript and Three.js for the workspace; FastAPI, NumPy, SciPy and scikit-learn for processing; Ollama for local vision/language; Blender as the geometry evaluation engine; SQLite WAL for history and production queues.
 
 - [Architecture and design decisions](docs/ARCHITECTURE.md)
 - [Figure Tools integration](docs/FIGURE_TOOLS.md)

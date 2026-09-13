@@ -56,11 +56,18 @@ export default function EvaluationPanel({
       </p>
       {!project.blenderSource ? (
         <p className="review-warning">
-          Añade una copia .blend con las texturas empaquetadas o con rutas absolutas.
+          {window.sculptorsHoardDesktop
+            ? 'Abre el proyecto Blender desde la biblioteca para cargar sus texturas aplicadas.'
+            : 'Abre un .blend con las texturas empaquetadas o con rutas absolutas.'}
         </p>
       ) : (
         <p className="small">{project.blenderSource.name}</p>
       )}
+      {project.blendImport?.warnings.map((warning) => (
+        <p className="review-warning" key={warning}>
+          {warning}
+        </p>
+      ))}
       {!evaluation && (
         <>
           <label className="field-select">

@@ -44,6 +44,8 @@ export type Asset = {
   version: number;
   processingMs: number | null;
   approved: boolean;
+  material?: string;
+  sourcePath?: string;
 };
 export type ModelFile = { id: string; name: string; file: string };
 export type Relation = { upper: string; lower: string; reason: string; apply: boolean };
@@ -67,6 +69,7 @@ export type Project = {
   approved: boolean;
   history: unknown[];
   blenderSource?: ModelFile;
+  blendImport?: { objects: string[]; warnings: string[]; seconds: number };
   evaluation?: {
     id: string;
     final: number;

@@ -20,7 +20,6 @@ import tempfile
 from pathlib import Path
 import urllib.request
 import uuid
-import webbrowser
 import zipfile
 
 API = "http://127.0.0.1:8767/api"
@@ -284,7 +283,7 @@ class RELIEF_OT_send(bpy.types.Operator):
                 result = upload(p["id"], [snapshot, path, *files.values()])
                 if result.get("errors"):
                     raise RuntimeError("; ".join(result["errors"]))
-                webbrowser.open("http://127.0.0.1:8767/?project=" + p["id"])
+                request("/desktop/open", json.dumps({"project": p["id"]}).encode())
             self.report({"INFO"}, "Modelo y texturas enviados. Los originales se conservan.")
             return {"FINISHED"}
         except Exception as e:
