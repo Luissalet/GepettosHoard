@@ -30,13 +30,17 @@ from .processing import (
 from . import vision
 
 ROOT = Path(__file__).resolve().parents[1]
-DATA = Path(os.environ.get("RELIEF_DATA_DIR", str(ROOT / "data")))
+DATA = Path(
+    os.environ.get(
+        "SCULPTORS_HOARD_DATA_DIR", os.environ.get("RELIEF_DATA_DIR", str(ROOT / "data"))
+    )
+)
 DATA.mkdir(parents=True, exist_ok=True)
 Image.MAX_IMAGE_PIXELS = 100_000_000
-app = FastAPI(title="SculptHoard", version="0.1.0")
+app = FastAPI(title="Sculptor’s Hoard", version="0.1.0")
 lock = threading.RLock()
 export_guard = threading.BoundedSemaphore(1)
-executor = ThreadPoolExecutor(max_workers=1, thread_name_prefix="relief-vision")
+executor = ThreadPoolExecutor(max_workers=1, thread_name_prefix="sculptors-hoard-vision")
 jobs = {}
 
 
@@ -637,7 +641,7 @@ def export_impl(pid: str):
         "textures": [],
         "proposal": p.get("proposal"),
         "history": p["history"],
-        "notes": "Use SculptHoard Bridge to import into Figure Tools: it adapts grayscale to R - 128/255 in local node copies. Height maps are Non-Color data. Color IDs require palette.json, not luminance. Strength is scene-dependent.",
+        "notes": "Use Sculptor’s Hoard Bridge to import into Figure Tools: it adapts grayscale to R - 128/255 in local node copies. Height maps are Non-Color data. Color IDs require palette.json, not luminance. Strength is scene-dependent.",
     }
     with zipfile.ZipFile(target, "w", compression=zipfile.ZIP_STORED) as archive:
         for a in ready:
@@ -655,17 +659,19 @@ def export_impl(pid: str):
             archive.writestr(f"{stem}_palette.json", json.dumps({"levels": palette}, indent=2))
             manifest["textures"].append(a)
         manifest["export_seconds"] = round(time.perf_counter() - start, 2)
-        archive.writestr("relief-project.json", json.dumps(manifest, ensure_ascii=False, indent=2))
+        archive.writestr(
+            "sculptors-hoard-project.json", json.dumps(manifest, ensure_ascii=False, indent=2)
+        )
         archive.writestr(
             "LEEME.txt",
-            "SCULPTHOARD\n\nImporta este ZIP con SculptHoard Bridge > Cargar mapas en Figure Tools.\nEl puente adapta copias locales de sus nodos a R - 128/255: 128 es neutro. Ajusta fuerza y subdivisión según tu figura.\nLos archivos _height.png son datos Non-Color. La conversión RGB original de Figure Tools no equivale a esta altura normalizada.\nLos colores _recolor.png son etiquetas: consulta cada _palette.json. No los conviertas a altura por luminancia.\nLa exportación reconstruye bordes por color a resolución original; revisa detalles finos y costuras UV.\nLa propuesta semántica y tus correcciones están en relief-project.json.\n",
+            "SCULPTOR’S HOARD\n\nImporta este ZIP con Sculptor’s Hoard Bridge > Cargar mapas en Figure Tools.\nEl puente adapta copias locales de sus nodos a R - 128/255: 128 es neutro. Ajusta fuerza y subdivisión según tu figura.\nLos archivos _height.png son datos Non-Color. La conversión RGB original de Figure Tools no equivale a esta altura normalizada.\nLos colores _recolor.png son etiquetas: consulta cada _palette.json. No los conviertas a altura por luminancia.\nLa exportación reconstruye bordes por color a resolución original; revisa detalles finos y costuras UV.\nLa propuesta semántica y tus correcciones están en sculptors-hoard-project.json.\n",
         )
     from starlette.background import BackgroundTask
 
     return FileResponse(
         target,
         media_type="application/zip",
-        filename="Relief-Studio.zip",
+        filename="Sculptors-Hoard.zip",
         background=BackgroundTask(target.unlink, missing_ok=True),
     )
 
@@ -836,7 +842,7 @@ def evaluated_export(pid: str):
             archive.write(result["maps"][a["material"]], name)
             textures.append(a)
         archive.writestr(
-            "relief-project.json",
+            "sculptors-hoard-project.json",
             json.dumps(
                 {
                     "profile": "figure-tools-native",

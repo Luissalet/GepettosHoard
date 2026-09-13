@@ -1,5 +1,5 @@
 ---
-name: SculptHoard
+name: Sculptor’s Hoard
 description: A local graphite-and-chalk material workbench for inspecting textures and editing relative heights.
 colors:
   action: "#c8512e"
@@ -112,7 +112,7 @@ components:
     rounded: "{rounded.canvas}"
 ---
 
-# Design System: SculptHoard
+# Design System: Sculptor’s Hoard
 
 ## Overview
 
@@ -169,7 +169,7 @@ The fixed height palette steps HSV hue from 0 to 0.72 at saturation 0.36 and val
 - **Body:** root type role; paragraph line-height is generous within compact panels.
 - **Label:** primary buttons and strong control labels. Most controls use 10–11px.
 - **Small and micro:** help text, interpretation reasons and metadata. Additional 8–9px annotations are used for viewport captions, status and small numeric labels.
-- **Brand:** “relief” uses 800 weight and “studio” 450 at 21px, with tight tracking; 18px on phones.
+- **Brand:** “sculptor’s” uses 800 weight and “hoard” 450 at 21px, with tight tracking; 18px on phones.
 - **Numbers:** dimensions, heights, timing and strength use tabular numerals.
 
 **The Quiet Hierarchy Rule.** Establish hierarchy through weight, spacing and panel grouping before increasing text size.

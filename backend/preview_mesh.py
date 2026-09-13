@@ -11,7 +11,7 @@ import numpy as np
 
 def preview_glb(inventory):
     doc = {
-        "asset": {"version": "2.0", "generator": "SculptHoard"},
+        "asset": {"version": "2.0", "generator": "Sculptor’s Hoard"},
         "scene": 0,
         "scenes": [{"nodes": []}],
         "nodes": [],

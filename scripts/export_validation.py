@@ -18,7 +18,7 @@ with httpx.Client(base_url="http://127.0.0.1:8766/api", timeout=240, trust_env=F
     with zipfile.ZipFile(path) as archive:
         assert all(Path(n).name == n for n in archive.namelist())
         archive.extractall(out)
-        manifest = json.loads(archive.read("relief-project.json"))
+        manifest = json.loads(archive.read("sculptors-hoard-project.json"))
     report = {
         "seconds": round(time.perf_counter() - start, 3),
         "zip_bytes": len(r.content),

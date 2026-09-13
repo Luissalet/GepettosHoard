@@ -12,7 +12,7 @@ result = bpy.ops.relief.import_maps(
 )
 assert result == {"FINISHED"}, result
 mod = next(m for m in obj.modifiers if m.name.startswith("Dynamic_Displacement"))
-assert mod.node_group.name.startswith("ReliefStudio_FigureTools")
+assert mod.node_group.name.startswith("SculptorsHoard_FigureTools")
 report = {
     "result": "passed",
     "seconds": round(time.perf_counter() - start, 2),

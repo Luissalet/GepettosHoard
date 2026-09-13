@@ -1,6 +1,6 @@
 # Figure Tools: bake, nodos y comprobación del relieve
 
-Revisión de la instalación local de Blender 5.0, 12 de septiembre de 2026. Se usa el complemento instalado; su código y sus bibliotecas `.blend` no se distribuyen dentro de SculptHoard.
+Revisión de la instalación local de Blender 5.0, 12 de septiembre de 2026. Se usa el complemento instalado; su código y sus bibliotecas `.blend` no se distribuyen dentro de Sculptor’s Hoard.
 
 ## Qué se ejecuta
 

@@ -45,6 +45,6 @@ if not running():
         time.sleep(0.5)
     else:
         raise SystemExit(
-            "No se pudo iniciar SculptHoard. Consulta logs/server.log y las instrucciones de instalación."
+            "No se pudo iniciar Sculptor’s Hoard. Consulta logs/server.log y las instrucciones de instalación."
         )
 webbrowser.open("http://127.0.0.1:8766")

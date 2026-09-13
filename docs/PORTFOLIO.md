@@ -1,4 +1,4 @@
-# SculptHoard · proyecto de ingeniería de IA
+# Sculptor’s Hoard · proyecto de ingeniería de IA
 
 ## Problema
 
@@ -19,7 +19,7 @@ Un taller local que relaciona modelo 3D, UV y regiones de textura. La visión re
 
 ## Texto breve para CV
 
-Desarrollé SculptHoard, un taller local de IA multimodal para generar y editar mapas de relieve de figuras 3D. Integré visión sobre modelo y UV, restricciones de alturas, exportación RGBA de 16 bits a 4K/8K y un ciclo de evaluación real en Blender/Figure Tools. Implementé proyectos con recuperación transaccional, undo/redo y procesamiento por lotes; medí 20,28 s para exportar un mapa 8192² con padding UV en el equipo de desarrollo.
+Desarrollé Sculptor’s Hoard, un taller local de IA multimodal para generar y editar mapas de relieve de figuras 3D. Integré visión sobre modelo y UV, restricciones de alturas, exportación RGBA de 16 bits a 4K/8K y un ciclo de evaluación real en Blender/Figure Tools. Implementé proyectos con recuperación transaccional, undo/redo y procesamiento por lotes; medí 20,28 s para exportar un mapa 8192² con padding UV en el equipo de desarrollo.
 
 ## Demo
 

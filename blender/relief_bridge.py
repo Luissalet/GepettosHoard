@@ -1,16 +1,16 @@
-"""SculptHoard bridge. Install this file as a Blender add-on.
+"""Sculptor’s Hoard bridge. Install this file as a Blender add-on.
 
 Figure Tools is used for material separation, UV binding and subdivision.
 Only project-local node-group copies are adapted for normalized signed maps.
 """
 
 bl_info = {
-    "name": "SculptHoard Bridge",
-    "author": "SculptHoard",
+    "name": "Sculptor’s Hoard Bridge",
+    "author": "Sculptor’s Hoard",
     "version": (0, 1, 0),
     "blender": (4, 3, 0),
     "category": "Object",
-    "location": "View3D > Sidebar > SculptHoard",
+    "location": "View3D > Sidebar > Sculptor’s Hoard",
 }
 import bpy
 from bpy_extras.io_utils import ImportHelper
@@ -33,7 +33,7 @@ def request(path, data=None, content_type="application/json"):
 
 
 def upload(pid, paths):
-    boundary = "relief-" + uuid.uuid4().hex
+    boundary = "sculptors-hoard-" + uuid.uuid4().hex
     body = bytearray()
     for p in paths:
         safe_name = p.name.replace('"', "_").replace("\r", "").replace("\n", "")
@@ -51,8 +51,8 @@ def upload(pid, paths):
 def signed_displacement_group(original):
     """Preserve Figure Tools routing, replace its RGB weighting with R - 128/255."""
     group = original.copy()
-    group.name = "ReliefStudio_ImageDisplacement"
-    transfer = bpy.data.node_groups.new("ReliefStudio_SignedHeight", "GeometryNodeTree")
+    group.name = "SculptorsHoard_ImageDisplacement"
+    transfer = bpy.data.node_groups.new("SculptorsHoard_SignedHeight", "GeometryNodeTree")
     transfer.interface.new_socket(name="Color", in_out="INPUT", socket_type="NodeSocketColor")
     transfer.interface.new_socket(name="Value", in_out="OUTPUT", socket_type="NodeSocketFloat")
     inp = transfer.nodes.new("NodeGroupInput")
@@ -140,7 +140,7 @@ def apply_export(obj, manifest, directory, strength=0.005, subdivision=2):
                 mod[sockets[key]] = settings[key]
     else:
         group_copy = mod.node_group.copy()
-        group_copy.name = "ReliefStudio_FigureTools"
+        group_copy.name = "SculptorsHoard_FigureTools"
         mod.node_group = group_copy
         for node in group_copy.nodes:
             if (
@@ -165,7 +165,7 @@ def apply_export(obj, manifest, directory, strength=0.005, subdivision=2):
             raise RuntimeError(f"Figure Tools no ha creado pareja para {material.name}.")
         image = bpy.data.images.load(str(path.resolve()), check_existing=False)
         image.colorspace_settings.name = "Non-Color"
-        image.name = f"Relief_{a['name']}"
+        image.name = f"SculptorsHoard_{a['name']}"
         mod[sockets[f"Image{pair}"]] = image
         mod[sockets[f"AddScale{pair}"]] = 0.0
         mod[sockets[f"MaterialSubdiv{pair}"]] = 0
@@ -199,7 +199,7 @@ def apply_export(obj, manifest, directory, strength=0.005, subdivision=2):
 
 class RELIEF_OT_send(bpy.types.Operator):
     bl_idname = "relief.send_scene"
-    bl_label = "Abrir en SculptHoard"
+    bl_label = "Abrir en Sculptor’s Hoard"
     bl_options = {"REGISTER"}
 
     def execute(self, context):
@@ -217,7 +217,7 @@ class RELIEF_OT_send(bpy.types.Operator):
         files = {}
         try:
             request("/health")
-            with tempfile.TemporaryDirectory(prefix="relief-") as temp:
+            with tempfile.TemporaryDirectory(prefix="sculptors-hoard-") as temp:
                 snapshot = Path(temp) / "figure-source.blend"
                 saved_paths = [(im, im.filepath) for im in bpy.data.images if im.source == "FILE"]
                 try:
@@ -236,7 +236,7 @@ class RELIEF_OT_send(bpy.types.Operator):
                         preserve_all_data_layers=True,
                         depsgraph=context.evaluated_depsgraph_get(),
                     )
-                    obj = bpy.data.objects.new(source.name + "_ReliefPreview", mesh)
+                    obj = bpy.data.objects.new(source.name + "_SculptorsHoardPreview", mesh)
                     context.collection.objects.link(obj)
                     obj.matrix_world = source.matrix_world.copy()
                     copies.append(obj)
@@ -328,7 +328,10 @@ class RELIEF_OT_import(bpy.types.Operator, ImportHelper):
                     if Path(item.filename).name != item.filename or "\\" in item.filename:
                         raise RuntimeError("El ZIP contiene rutas no permitidas.")
                 archive.extractall(directory)
-            manifest = json.loads((directory / "relief-project.json").read_text("utf-8"))
+            manifest_path = directory / "sculptors-hoard-project.json"
+            if not manifest_path.is_file():
+                manifest_path = directory / "relief-project.json"  # Legacy exported projects.
+            manifest = json.loads(manifest_path.read_text("utf-8"))
             report = apply_export(obj, manifest, directory, self.strength, self.subdivision)
             self.report(
                 {"INFO"},
@@ -341,11 +344,11 @@ class RELIEF_OT_import(bpy.types.Operator, ImportHelper):
 
 
 class RELIEF_PT_panel(bpy.types.Panel):
-    bl_label = "SculptHoard"
+    bl_label = "Sculptor’s Hoard"
     bl_idname = "RELIEF_PT_panel"
     bl_space_type = "VIEW_3D"
     bl_region_type = "UI"
-    bl_category = "SculptHoard"
+    bl_category = "Sculptor’s Hoard"
 
     def draw(self, context):
         layout = self.layout

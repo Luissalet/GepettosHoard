@@ -43,7 +43,7 @@ def import_run(source, blend, glb=None, name=None, project_id=None):
 
         mesh = preview_glb(json.loads((target / "scene/materials.json").read_text("utf-8")))
         if mesh:
-            server.ingest(pid, "SculptHoard-preview.glb", mesh)
+            server.ingest(pid, "Sculptor’s Hoard-preview.glb", mesh)
     for item in json.loads((target / "scene/materials.json").read_text("utf-8")):
         name = item["material"]
         p = server.read(pid)

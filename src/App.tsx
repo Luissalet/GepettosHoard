@@ -452,12 +452,12 @@ export default function App() {
         }}
       />
       <header className="topbar">
-        <a className="brand" href="/" aria-label="SculptHoard">
+        <a className="brand" href="/" aria-label="Sculptor’s Hoard">
           <span className="brand-symbol">
             <Stack size={25} weight="duotone" />
           </span>
           <strong>
-            sculpt<span>hoard</span>
+            sculptor’s <span>hoard</span>
           </strong>
         </a>
         <div className="project-breadcrumb">
@@ -561,7 +561,13 @@ export default function App() {
                       onClick={() => setSurface('model')}
                     >
                       <Cube size={17} />
-                      <span>{m.name}</span>
+                      <span>
+                        {/^(SculptHoard|Sculptor’s Hoard|Sculptors-Hoard)-preview\.glb$/.test(
+                          m.name,
+                        )
+                          ? 'Vista previa del modelo'
+                          : m.name}
+                      </span>
                     </button>
                   ))
                 ) : (

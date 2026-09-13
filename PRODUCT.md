@@ -1,4 +1,4 @@
-# SculptHoard
+# Sculptor’s Hoard
 <!-- impeccable:product-schema 1 -->
 
 ## Platform

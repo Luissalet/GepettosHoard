@@ -44,7 +44,7 @@ def test_import_edit_export_persists_dimensions_and_approval_invalidates(client)
     r = client.get(f"/api/projects/{pid}/export")
     assert r.status_code == 200
     with zipfile.ZipFile(io.BytesIO(r.content)) as archive:
-        manifest = json.loads(archive.read("relief-project.json"))
+        manifest = json.loads(archive.read("sculptors-hoard-project.json"))
         assert manifest["textures"][0]["width"] == 128
         names = [n for n in archive.namelist() if n.endswith("_height.png")]
         with Image.open(io.BytesIO(archive.read(names[0]))) as image:

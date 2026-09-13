@@ -1,8 +1,8 @@
-# SculptHoard
+# Sculptor’s Hoard
 
 **Turn painted character textures into editable 3D relief.**
 
-A local AI workspace for preparing heightmaps for Blender Figure Tools. SculptHoard connects what a surface *means* on a 3D model to how it should displace: an eyelid, a pupil, a buckle and a painted shadow need different treatment.
+A local AI workspace for preparing heightmaps for Blender Figure Tools. Sculptor’s Hoard connects what a surface *means* on a 3D model to how it should displace: an eyelid, a pupil, a buckle and a painted shadow need different treatment.
 
 The project grew from a practical problem: repeatedly recoloring large character textures by hand before preparing figures for printing.
 
@@ -39,7 +39,7 @@ npm run build
 .venv\Scripts\python start.py
 ```
 
-After installation, use **Abrir SculptHoard.cmd**. The application opens at `http://127.0.0.1:8766`. Set `RELIEF_BLENDER` if Blender is installed elsewhere.
+After installation, use **Abrir Sculptors Hoard.cmd**. The application opens at `http://127.0.0.1:8766`. Set `SCULPTORS_HOARD_BLENDER` if Blender is installed elsewhere.
 
 1. In **Equipo y lotes**, choose an installed vision model and check its real memory state.
 2. Scan a folder of `.blend` scenes, select figures and enqueue a preparation. The current complete-figure recipe separates clothing named `mTops`; other material selections are available in the single-figure workflow.
@@ -82,3 +82,7 @@ React, TypeScript and Three.js for the workspace; FastAPI, NumPy, SciPy and scik
 - [Portfolio case study](docs/PORTFOLIO.md)
 
 Code is available under the [MIT license](LICENSE). Third-party models, add-ons and input assets retain their own licenses.
+
+### Compatibility with earlier names
+
+Existing saved projects and browser preferences remain available. The Blender bridge reads both `sculptors-hoard-project.json` and legacy `relief-project.json` exports. `RELIEF_BLENDER` and `RELIEF_DATA_DIR` remain supported as fallbacks for `SCULPTORS_HOARD_BLENDER` and `SCULPTORS_HOARD_DATA_DIR`. The internal `relief.*` Blender operator identifiers are retained for existing integrations.

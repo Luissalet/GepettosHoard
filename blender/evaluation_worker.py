@@ -76,7 +76,7 @@ def texture_node(mat):
 
 def smooth_inspection_normals(obj):
     # Last in the stack: changes display normals, not displacement or positions.
-    name = "Relief_InspectionSmooth"
+    name = "SculptorsHoard_InspectionSmooth"
     group = bpy.data.node_groups.new(name, "GeometryNodeTree")
     group.interface.new_socket(name="Geometry", in_out="INPUT", socket_type="NodeSocketGeometry")
     group.interface.new_socket(name="Geometry", in_out="OUTPUT", socket_type="NodeSocketGeometry")
@@ -108,7 +108,9 @@ def cameras_and_lights(objects):
     scene.view_settings.view_transform = "AgX"
     scene.view_settings.look = "AgX - Medium High Contrast"
     scene.view_settings.exposure = 0
-    world = bpy.data.worlds.get("Relief_Eval_World") or bpy.data.worlds.new("Relief_Eval_World")
+    world = bpy.data.worlds.get("SculptorsHoard_Eval_World") or bpy.data.worlds.new(
+        "SculptorsHoard_Eval_World"
+    )
     world.use_nodes = True
     world.node_tree.nodes["Background"].inputs[0].default_value = (0.19, 0.21, 0.22, 1)
     world.node_tree.nodes["Background"].inputs[1].default_value = 0.5
@@ -118,18 +120,18 @@ def cameras_and_lights(objects):
         ("Fill", (1, -0.7, 0.6), 22),
         ("Rim", (0, 1, 1.4), 45),
     ]:
-        light = bpy.data.objects.get("Relief_Eval_" + name)
+        light = bpy.data.objects.get("SculptorsHoard_Eval_" + name)
         if light is None:
-            data = bpy.data.lights.new("Relief_Eval_" + name, "AREA")
+            data = bpy.data.lights.new("SculptorsHoard_Eval_" + name, "AREA")
             light = bpy.data.objects.new(data.name, data)
             scene.collection.objects.link(light)
         light.data.energy = power * 0.18 * size * size
         light.data.size = size
         light.location = center + Vector(offset) * size
         light.rotation_euler = (center - light.location).to_track_quat("-Z", "Y").to_euler()
-    camera = bpy.data.objects.get("Relief_Eval_Camera")
+    camera = bpy.data.objects.get("SculptorsHoard_Eval_Camera")
     if camera is None:
-        data = bpy.data.cameras.new("Relief_Eval_Camera")
+        data = bpy.data.cameras.new("SculptorsHoard_Eval_Camera")
         camera = bpy.data.objects.new(data.name, data)
         scene.collection.objects.link(camera)
     camera.data.type = "ORTHO"
@@ -148,8 +150,8 @@ def render_views(objects, prefix, clay=True, front_only=False, focus=None):
         if focus.get("aspect"):
             scene.render.resolution_y = round(scene.render.resolution_x / focus["aspect"])
     if clay:
-        material = bpy.data.materials.get("Relief_Eval_Clay") or bpy.data.materials.new(
-            "Relief_Eval_Clay"
+        material = bpy.data.materials.get("SculptorsHoard_Eval_Clay") or bpy.data.materials.new(
+            "SculptorsHoard_Eval_Clay"
         )
         material.use_nodes = True
         bsdf = material.node_tree.nodes.get("Principled BSDF")
@@ -409,7 +411,7 @@ if phase in {"prepare", "inspect"}:
     # The analyzed atlas stays in color; other materials become neutral gray.
     # This gives the VLM visible material scope, instead of asking it to infer
     # anatomical location from a filename or palette color alone.
-    neutral = bpy.data.materials.new("Relief_Context")
+    neutral = bpy.data.materials.new("SculptorsHoard_Context")
     neutral.use_nodes = True
     neutral.node_tree.nodes["Principled BSDF"].inputs["Base Color"].default_value = (
         0.25,
@@ -515,8 +517,8 @@ else:
             # pixels, reassign the socket and tag the node tree/object for evaluation.
             image.reload()
             if config.get("neutral"):
-                image = bpy.data.images.get("Relief_Neutral") or bpy.data.images.new(
-                    "Relief_Neutral", width=8, height=8
+                image = bpy.data.images.get("SculptorsHoard_Neutral") or bpy.data.images.new(
+                    "SculptorsHoard_Neutral", width=8, height=8
                 )
                 image.colorspace_settings.name = "Non-Color"
                 image.pixels[:] = [128 / 255, 128 / 255, 128 / 255, 1] * 64
@@ -585,7 +587,7 @@ else:
                     bm.free()
                 else:
                     select(copy)
-                    shell = copy.modifiers.new("Relief_InnerShell", "SOLIDIFY")
+                    shell = copy.modifiers.new("SculptorsHoard_InnerShell", "SOLIDIFY")
                     shell.thickness = config.get("shell_thickness", 0.06)
                     shell.offset = -1
                     bpy.ops.object.modifier_apply(modifier=shell.name)
@@ -597,12 +599,12 @@ else:
         bpy.ops.object.join()
         finished = bpy.context.object
         bpy.ops.object.transform_apply(location=False, rotation=False, scale=True)
-        remesh = finished.modifiers.new("Relief_Union", "REMESH")
+        remesh = finished.modifiers.new("SculptorsHoard_Union", "REMESH")
         remesh.mode = "VOXEL"
         remesh.voxel_size = config["finish_voxel"]
         remesh.use_smooth_shade = True
         bpy.ops.object.modifier_apply(modifier=remesh.name)
-        polish = finished.modifiers.new("Relief_SurfacePolish", "SMOOTH")
+        polish = finished.modifiers.new("SculptorsHoard_SurfacePolish", "SMOOTH")
         polish.factor = 0.5
         polish.iterations = 4
         bpy.ops.object.modifier_apply(modifier=polish.name)

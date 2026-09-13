@@ -19,7 +19,12 @@ from .native_surface import export_height, export_control
 
 ROOT = Path(__file__).resolve().parents[1]
 BLENDER = Path(
-    os.environ.get("RELIEF_BLENDER", r"C:\Program Files\Blender Foundation\Blender 5.0\blender.exe")
+    os.environ.get(
+        "SCULPTORS_HOARD_BLENDER",
+        os.environ.get(
+            "RELIEF_BLENDER", r"C:\Program Files\Blender Foundation\Blender 5.0\blender.exe"
+        ),
+    )
 )
 
 
@@ -179,7 +184,7 @@ def export_cached(item, folder, regions, target):
 def worker(source, scene, phase, label=None, maps=None, **options):
     if not BLENDER.is_file():
         raise RuntimeError(
-            "Configura RELIEF_BLENDER con la ubicación de Blender y activa Figure Tools."
+            "Configura SCULPTORS_HOARD_BLENDER con la ubicación de Blender y activa Figure Tools."
         )
     name = label or phase
     config = scene / f"{name}.json"
