@@ -4,11 +4,11 @@ const fs = require('node:fs');
 const path = require('node:path');
 const ROOT = path.resolve(__dirname, '..');
 const BASE = 'http://127.0.0.1:8767';
-const TITLE = 'Sculptor’s Hoard';
+const TITLE = 'Gepetto’s Hoard';
 let window;
 // Keep the application identifier ASCII: Electron also uses it in User-Agent.
-app.setName("Sculptor's Hoard");
-app.setAppUserModelId('com.sculptors.hoard');
+app.setName("Gepetto's Hoard");
+app.setAppUserModelId('com.gepettos.hoard');
 
 async function healthy() {
   let response;
