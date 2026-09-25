@@ -160,6 +160,12 @@ svg {
   width: 32px;
   height: 32px;
 }
+.brand-symbol img {
+  width: 30px;
+  height: 30px;
+  border-radius: 7px;
+  display: block;
+}
 .brand strong {
   font-size: 21px;
   letter-spacing: -0.05em;

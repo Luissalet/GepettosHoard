@@ -541,12 +541,12 @@ export default function App() {
         }}
       />
       <header className="topbar">
-        <a className="brand" href="/" aria-label="Sculptor’s Hoard">
+        <a className="brand" href="/" aria-label="Gepetto’s Hoard">
           <span className="brand-symbol">
-            <Stack size={25} weight="duotone" />
+            <img src="/icon-192.png" alt="" width={30} height={30} />
           </span>
           <strong>
-            sculptor’s <span>hoard</span>
+            gepetto’s <span>hoard</span>
           </strong>
         </a>
         <div className="project-breadcrumb">
@@ -737,11 +737,11 @@ export default function App() {
         <main className="main-workspace">
           <div className="document-heading">
             <div>
-              <h1>{active ? active.name.replace(/\.[^.]+$/, '') : 'De la textura al relieve.'}</h1>
+              <h1>{active ? active.name.replace(/\.[^.]+$/, '') : project?.name || 'Nuevo proyecto'}</h1>
               <p>
                 {active
                   ? `${active.width.toLocaleString('es')} × ${active.height.toLocaleString('es')} px · resolución original conservada`
-                  : 'Un taller para entender superficies, decidir alturas y preparar tus figuras.'}
+                  : 'Abre un modelo con sus texturas para empezar.'}
               </p>
             </div>
             {project && (
@@ -840,12 +840,8 @@ export default function App() {
               {(!project || (surface === 'model' && !project.models.length)) && (
                 <div className="empty-stage">
                   <Cube size={62} weight="thin" />
-                  <h2>La forma cuenta la historia.</h2>
-                  <p>
-                    Añade el modelo y sus texturas.
-                    <br />
-                    La IA conectará lo que ve con sus regiones UV.
-                  </p>
+                  <h2>Añade el modelo y sus texturas.</h2>
+                  <p>La IA conectará lo que ve con sus regiones UV.</p>
                   <button
                     className="button primary"
                     disabled={working}
