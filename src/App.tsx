@@ -27,6 +27,7 @@ import EvaluationPanel from './EvaluationPanel';
 import EvaluationViewport from './EvaluationViewport';
 import ProjectControls from './ProjectControls';
 import OperationsPanel from './OperationsPanel';
+import ReferencePosePanel from './ReferencePosePanel';
 import SceneReading from './SceneReading';
 import type { ViewportHandle } from './Viewport';
 import { api, imageUrl, PALETTE } from './types';
@@ -132,6 +133,8 @@ function UVCanvas({
 
 export default function App() {
   const [control, setControl] = useState(false);
+  const [posePanel, setPosePanel] = useState(false);
+  const [poseVisited, setPoseVisited] = useState(false);
   const [project, setProject] = useState<Project | null>(null);
   const [projects, setProjects] = useState<Summary[]>([]);
   const [activeId, setActiveId] = useState<string | null>(null);
@@ -139,6 +142,9 @@ export default function App() {
   const [surface, setSurface] = useState<Surface>('model');
   const [mode, setMode] = useState<ImageMode>('original');
   const [projectFilter, setProjectFilter] = useState('');
+  const [portablePath, setPortablePath] = useState('');
+  const [portableForm, setPortableForm] = useState(false);
+  const [portableSave, setPortableSave] = useState(false);
   const [busy, setBusy] = useState('');
   const [error, setError] = useState('');
   const [toast, setToast] = useState('');
@@ -348,6 +354,53 @@ export default function App() {
       await refreshProjects();
     });
   }
+  async function openPortable(path?: string, folder = false) {
+    if (!path && !window.sculptorsHoardDesktop?.pickPortable) {
+      setPortableSave(false);
+      setPortableForm(true);
+      return;
+    }
+    await run('Abriendo proyecto portable…', async () => {
+      const selectedPath = path || (await window.sculptorsHoardDesktop!.pickPortable!(folder));
+      if (!selectedPath) return;
+      await pendingEdit.current;
+      const result = await api<Project>('/projects/import-portable', {
+        method: 'POST',
+        body: JSON.stringify({ path: selectedPath }),
+      });
+      accept(result);
+      setSelected(null);
+      setJob(null);
+      setRelations([]);
+      setUvLines([]);
+      setMode('color');
+      setTab('regions');
+      setPortableForm(false);
+      setProjectFilter('');
+      setToast('Proyecto abierto para revisar. El original se conserva.');
+      await refreshProjects();
+    });
+  }
+  async function savePortable(path?: string) {
+    if (!project) return;
+    if (!path && !window.sculptorsHoardDesktop?.savePortable) {
+      setPortableSave(true);
+      setPortablePath('');
+      setPortableForm(true);
+      return;
+    }
+    await run('Guardando proyecto .gepettos…', async () => {
+      const selectedPath = path || (await window.sculptorsHoardDesktop!.savePortable!());
+      if (!selectedPath) return;
+      await pendingEdit.current;
+      await api(`/projects/${project.id}/export-portable`, {
+        method: 'POST',
+        body: JSON.stringify({ path: selectedPath }),
+      });
+      setPortableForm(false);
+      setToast('Archivo .gepettos guardado. Listo para abrir y revisar.');
+    });
+  }
   async function openBlender() {
     if (!window.sculptorsHoardDesktop) {
       blendInput.current?.click();
@@ -540,7 +593,7 @@ export default function App() {
           e.target.value = '';
         }}
       />
-      <header className="topbar">
+      <header className="topbar with-pose-navigation">
         <a className="brand" href="/" aria-label="Gepetto’s Hoard">
           <span className="brand-symbol">
             <img src="/icon-192.png" alt="" width={30} height={30} />
@@ -555,7 +608,10 @@ export default function App() {
           <strong>{project?.name || 'Nuevo proyecto'}</strong>
         </div>
         <div className="top-actions">
-          <button className="button secondary" onClick={() => setControl(!control)}>
+          <button className="button secondary" aria-pressed={posePanel} onClick={() => { setPoseVisited(true); setPosePanel(!posePanel); setControl(false); }}>
+            Posar desde imagen
+          </button>
+          <button className="button secondary" onClick={() => { setControl(!control); setPosePanel(false); }}>
             {control ? 'Volver al taller' : 'Equipo y lotes'}
           </button>
           <span className="local-label">
@@ -579,6 +635,7 @@ export default function App() {
           </button>
         </div>
       </header>
+      {poseVisited && <div style={{ display: posePanel ? 'flex' : 'none', flex: 1, minHeight: 0 }}><ReferencePosePanel project={project} onClose={() => setPosePanel(false)} /></div>}
       {control && (
         <OperationsPanel
           model={model}
@@ -597,7 +654,7 @@ export default function App() {
           }
         />
       )}
-      <div className="workspace" style={{ display: control ? 'none' : undefined }}>
+      <div className="workspace" style={{ display: control || posePanel ? 'none' : undefined }}>
         <aside className={`library ${rail ? 'visible' : ''}`}>
           <div className="panel-heading">
             <h2>Biblioteca</h2>
@@ -619,9 +676,76 @@ export default function App() {
           <button
             className="text-button file-import"
             disabled={working}
+            onClick={() => void openPortable()}
+          >
+            <FolderOpen size={14} /> Abrir .gepettos
+          </button>
+          <button
+            className="text-button file-import"
+            disabled={working}
+            onClick={() => void openPortable(undefined, true)}
+          >
+            <FolderOpen size={14} /> Abrir carpeta portable
+          </button>
+          <button
+            className="text-button file-import"
+            disabled={working || !project}
+            onClick={() => void savePortable()}
+          >
+            <FloppyDisk size={14} /> Guardar .gepettos
+          </button>
+          {portableForm && (
+            <form
+              className="portable-form"
+              onSubmit={(event) => {
+                event.preventDefault();
+                if (portableSave) void savePortable(portablePath.trim());
+                else void openPortable(portablePath.trim());
+              }}
+            >
+              <label htmlFor="portable-path">
+                {portableSave ? 'Nuevo archivo .gepettos' : 'Archivo o carpeta del proyecto'}
+              </label>
+              <input
+                id="portable-path"
+                value={portablePath}
+                autoFocus
+                required
+                placeholder="E:\\Figuras\\Proyecto.gepettos"
+                onChange={(event) => setPortablePath(event.target.value)}
+                aria-describedby="portable-help"
+                disabled={working}
+              />
+              <small id="portable-help">
+                {portableSave
+                  ? 'Pega una ruta absoluta nueva. Los archivos existentes no se sobrescriben.'
+                  : 'Pega la ruta de un archivo .gepettos o de una carpeta que contiene project.json.'}
+              </small>
+              <div>
+                <button
+                  className="button secondary"
+                  type="submit"
+                  disabled={working || !portablePath.trim()}
+                >
+                  {portableSave ? 'Guardar' : 'Abrir'}
+                </button>
+                <button
+                  className="text-button"
+                  type="button"
+                  disabled={working}
+                  onClick={() => setPortableForm(false)}
+                >
+                  Cancelar
+                </button>
+              </div>
+            </form>
+          )}
+          <button
+            className="text-button file-import"
+            disabled={working}
             onClick={() => folderInput.current?.click()}
           >
-            <FolderOpen size={14} /> Importar carpeta
+            <FolderOpen size={14} /> Importar carpeta de texturas
           </button>
           <button
             className="text-button file-import"
@@ -1113,6 +1237,33 @@ export default function App() {
                         disabled={working}
                       />
                     </label>
+                    {region.displacementColor && (
+                      <label className="field-select">
+                        Color de relieve
+                        <input
+                          type="color"
+                          value={
+                            '#' +
+                            region.displacementColor
+                              .map((c) => c.toString(16).padStart(2, '0'))
+                              .join('')
+                          }
+                          disabled={working}
+                          onChange={(e) =>
+                            updateRegion({
+                              displacementColor: [1, 3, 5].map((i) =>
+                                parseInt(e.target.value.slice(i, i + 2), 16),
+                              ),
+                            })
+                          }
+                          onBlur={() => void saveRegion()}
+                        />
+                        <small>
+                          Este color controla el relieve en Blender. La altura numérica es solo una
+                          referencia.
+                        </small>
+                      </label>
+                    )}
                     <label className="field-row">
                       Altura relativa <span>{region.height} / 255</span>
                       <input
@@ -1120,7 +1271,7 @@ export default function App() {
                         min="0"
                         max="255"
                         value={region.height}
-                        disabled={working}
+                        disabled={working || !!region.displacementColor}
                         onChange={(e) => updateRegion({ height: +e.target.value })}
                         onPointerUp={() => void saveRegion()}
                         onKeyUp={(e) => {

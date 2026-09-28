@@ -86,25 +86,90 @@ def segment(image: Image.Image, clusters: int = 6, resolution: int = 768):
     return out, regions, work, km.cluster_centers_
 
 
+def segment_with_anchors(image, colors, resolution=1536):
+    """Caller-selected prototypes; tiny islands join only their own color class."""
+    if not 1 <= len(colors) <= 32:
+        raise ValueError("Provide 1–32 RGB anchors.")
+    for color in colors:
+        displacement_color({"displacementColor": color})
+    if len({tuple(c) for c in colors}) != len(colors):
+        raise ValueError("RGB anchors must be distinct.")
+    if not 256 <= resolution <= 4096:
+        raise ValueError("Anchor resolution must be 256–4096.")
+    work = image.convert("RGBA")
+    work.thumbnail((resolution, resolution), Image.Resampling.LANCZOS)
+    rgba = np.array(work)
+    valid = rgba[:, :, 3] > 0
+    if not valid.any():
+        raise ValueError("The texture is completely transparent.")
+
+    def features(rgb):
+        rgb = np.asarray(rgb, dtype=np.float32) / 255
+        return np.stack([rgb.mean(-1), rgb[..., 0] - rgb[..., 1],
+                         rgb[..., 2] - (rgb[..., 0] + rgb[..., 1]) / 2], axis=-1)
+
+    centers = features(colors)
+    values = features(rgba[..., :3])
+    best = np.full(valid.shape, np.inf, np.float32)
+    classes = np.full(valid.shape, -1, np.int16)
+    for i, center in enumerate(centers):
+        distance = np.sum((values - center) ** 2, axis=-1)
+        chosen = valid & (distance < best)
+        classes[chosen], best[chosen] = i, distance[chosen]
+    labels = np.full(valid.shape, -1, np.int16)
+    regions = []
+    for i in range(len(colors)):
+        components, count = ndimage.label(classes == i)
+        if not count:
+            raise ValueError(f"Anchor {i} has no pixels at this resolution; adjust anchors or resolution.")
+        sizes = np.bincount(components.ravel())
+        retained = sorted(range(1, count + 1), key=lambda c: (-sizes[c], c))
+        minimum = max(4, int(valid.sum() * 0.00001))
+        retained = [c for c in retained if sizes[c] >= minimum][:64] or retained[:1]
+        mapping = np.full(count + 1, -1, np.int16)
+        for component in retained:
+            rid = len(regions)
+            mapping[component] = rid
+            regions.append({"id": rid, "cluster": i})
+        chosen = components > 0
+        field = mapping[components]
+        missing = chosen & (field < 0)
+        if missing.any():
+            _, nearest = ndimage.distance_transform_edt(field < 0, return_indices=True)
+            field[missing] = field[tuple(nearest[:, missing])]
+        labels[chosen] = field[chosen]
+    return labels, describe(labels, rgba, regions), work, centers
+
+
 def describe(labels, rgba, regions):
     result = []
+    valid_count = max(1, int((labels >= 0).sum()))
+    objects = ndimage.find_objects(labels.astype(np.int32) + 1)
     for region in regions:
-        ys, xs = np.where(labels == region["id"])
+        rid = region["id"]
+        bounds = objects[rid] if rid < len(objects) else None
+        if bounds is None:
+            continue
+        # One pixel of the actual surrounding domain preserves EDT boundary
+        # behavior, including regions touching an image edge.
+        y0, y1 = max(0, bounds[0].start - 1), min(labels.shape[0], bounds[0].stop + 1)
+        x0, x1 = max(0, bounds[1].start - 1), min(labels.shape[1], bounds[1].stop + 1)
+        mask = labels[y0:y1, x0:x1] == rid
+        ys, xs = np.where(mask)
         if len(xs) == 0:
             continue
         # Label placement inside the region, away from boundaries.
-        mask = labels == region["id"]
         cy, cx = np.unravel_index(np.argmax(ndimage.distance_transform_edt(mask)), mask.shape)
-        color = np.median(rgba[:, :, :3][mask], axis=0).astype(int).tolist()
+        color = np.median(rgba[y0:y1, x0:x1, :3][mask], axis=0).astype(int).tolist()
         result.append(
             {
                 **region,
                 "name": f"Zona {region['id'] + 1}",
                 "height": 128,
                 "color": color,
-                "area": round(len(xs) / max(1, (labels >= 0).sum()) * 100, 2),
-                "center": [int(cx), int(cy)],
-                "bbox": [int(xs.min()), int(ys.min()), int(xs.max()), int(ys.max())],
+                "area": round(len(xs) / valid_count * 100, 2),
+                "center": [int(cx + x0), int(cy + y0)],
+                "bbox": [int(xs.min() + x0), int(ys.min() + y0), int(xs.max() + x0), int(ys.max() + y0)],
                 "confidence": None,
                 "reason": "Pendiente de interpretación del modelo 3D.",
                 "geometry": "unknown",
@@ -117,7 +182,9 @@ def render(labels, regions, mode="color", size=None):
     arr = np.zeros((*labels.shape, 4), dtype=np.uint8)
     for r in regions:
         h = max(0, min(255, round(r["height"])))
-        if mode == "height":
+        if mode == "manual-palette" or (mode == "color" and r.get("displacementColor") is not None):
+            c = displacement_color(r)
+        elif mode == "height":
             c = (h, h, h)
         elif mode == "ids":
             c = PALETTE[r["id"] % len(PALETTE)]
@@ -202,11 +269,23 @@ def native_blocks(source, labels, regions, centers):
         yield y, mapped, block[:, :, 3]
 
 
+def displacement_color(region):
+    """Exact artist RGB; never derive production color from ordinal height."""
+    color = region.get("displacementColor")
+    if not isinstance(color, list) or len(color) != 3 or any(
+        type(v) is not int or not 0 <= v <= 255 for v in color
+    ):
+        raise ValueError("Every region needs an explicit displacementColor RGB triplet.")
+    return color
+
+
 def region_lookup(regions, mode):
     lookup = np.zeros((max(r["id"] for r in regions) + 1, 3), np.uint8)
     for r in regions:
         v = max(0, min(255, round(r["height"])))
-        lookup[r["id"]] = (v, v, v) if mode == "height" else HEIGHT_PALETTE[v]
+        lookup[r["id"]] = displacement_color(r) if mode == "manual-palette" or (mode == "color" and r.get("displacementColor") is not None) else (
+            (v, v, v) if mode == "height" else HEIGHT_PALETTE[v]
+        )
     return lookup
 
 
@@ -267,6 +346,17 @@ def write_native_pair(source, labels, regions, centers, height_path, color_path)
     finally:
         for writer in writers:
             writer.close()
+
+
+def write_manual_palette(source, labels, regions, centers, path):
+    """Native RGB production map, exact source alpha, no colorspace conversion."""
+    lookup = region_lookup(regions, "manual-palette")
+    writer = PngRows(path, *source.size)
+    try:
+        for _, mapped, alpha in native_blocks(source, labels, regions, centers):
+            writer.rows(np.dstack([lookup[mapped], alpha]))
+    finally:
+        writer.close()
 
 
 def solve_relations(nodes, relations):

@@ -8,6 +8,7 @@ logs/
 *.tsbuildinfo
 test-results/
 .impeccable/review/
+.impeccable/surfaces/
 .env
 
 .env.*

@@ -4,6 +4,7 @@ export type Region = {
   name: string;
   height: number;
   color: number[];
+  displacementColor?: number[] | null;
   area: number;
   center: number[];
   bbox: number[];

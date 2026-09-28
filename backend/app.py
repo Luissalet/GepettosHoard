@@ -18,6 +18,7 @@ from fastapi import FastAPI, UploadFile, File, HTTPException
 from fastapi.responses import FileResponse, Response
 from fastapi.staticfiles import StaticFiles
 from pydantic import BaseModel, Field
+from typing import Annotated
 from .processing import (
     segment,
     render,
@@ -395,6 +396,9 @@ class RegionEdit(BaseModel):
     id: int
     height: int = Field(ge=0, le=255)
     name: str = Field(max_length=100)
+    displacementColor: list[Annotated[int, Field(strict=True, ge=0, le=255)]] | None = Field(
+        default=None, min_length=3, max_length=3
+    )
 
 
 class EditRequest(BaseModel):
@@ -417,6 +421,13 @@ def edit(pid: str, aid: str, body: EditRequest):
         linked = {}
         for r in body.regions:
             group = old[r.id].get("heightGroup")
+            if r.height != old[r.id]["height"] and (
+                old[r.id].get("displacementColor") is not None or any(
+                    other.get("displacementColor") is not None and group and other.get("heightGroup") == group
+                    for item in p["assets"] for other in item["regions"]
+                )
+            ):
+                raise HTTPException(400, "Esta superficie usa una paleta manual. Edita su color de relieve; la altura numérica es solo una referencia.")
             if group and r.height != old[r.id]["height"]:
                 if group in linked and linked[group] != r.height:
                     raise HTTPException(
@@ -427,8 +438,8 @@ def edit(pid: str, aid: str, body: EditRequest):
         changes = []
         for r in body.regions:
             before = old[r.id].copy()
-            old[r.id].update(r.model_dump())
-            if before["height"] != r.height or before["name"] != r.name:
+            old[r.id].update(r.model_dump(exclude_unset=True))
+            if before["height"] != r.height or before["name"] != r.name or before.get("displacementColor") != old[r.id].get("displacementColor"):
                 changes.append(
                     {"asset": aid, "region": r.id, "before": before, "after": old[r.id].copy()}
                 )
@@ -707,6 +718,15 @@ def export(pid: str):
 
 def export_impl(pid: str):
     p = read(pid)
+    if any(r.get('displacementColor') is not None for a in p['assets'] for r in a['regions']):
+        from .manual_export import export_manual_zip
+        from starlette.background import BackgroundTask
+        try:
+            target = export_manual_zip(p, folder(pid))
+        except ValueError as error:
+            raise HTTPException(400, str(error)) from error
+        return FileResponse(target, media_type='application/zip', filename='FigureTools-Paleta-Manual.zip',
+                            background=BackgroundTask(target.unlink, missing_ok=True))
     ready = [a for a in p["assets"] if a["regions"]]
     if not ready:
         raise HTTPException(400, "Primero prepara las regiones.")
@@ -1018,8 +1038,12 @@ def command_undo(pid: str):
 
 
 from .operations import install
+from .portable_project import router_for
+from .reference_pose import router_for as pose_router_for
 import sys
 
+app.include_router(router_for(sys.modules[__name__]))
+app.include_router(pose_router_for(sys.modules[__name__]))
 install(sys.modules[__name__])
 if (ROOT / "dist").exists():
     app.mount("/", StaticFiles(directory=ROOT / "dist", html=True), name="frontend")

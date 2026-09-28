@@ -9,3 +9,5 @@ httpx>=0.28,<1
 pytest>=8,<10
 pydantic>=2.10,<3
 threadpoolctl>=3.5,<4
+mcp>=1.12,<2
+sse-starlette>=1.6.1,<3

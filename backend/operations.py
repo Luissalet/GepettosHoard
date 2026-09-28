@@ -18,6 +18,7 @@ def install(server):
     def busy():
         return (
             runtime.busy()
+            or getattr(server, "pose_busy", lambda: False)()
             or queue.active()
             or any(j["status"] in {"queued", "running"} for j in server.jobs.values())
         )
@@ -36,6 +37,10 @@ def install(server):
             yield
         finally:
             queue.stop.set()
+            if hasattr(server, "pose_queue"):
+                for event in server.pose_queue.cancel_events.values():
+                    event.set()
+                server.pose_queue.pool.shutdown(wait=False)
 
     server.app.router.lifespan_context = lifespan
 

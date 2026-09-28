@@ -119,6 +119,32 @@ ipcMain.handle('pick-blender-project', async (event) => {
   return result.canceled ? null : result.filePaths[0];
 });
 
+ipcMain.handle('pick-portable-project', async (event, folder = false) => {
+  if (
+    !window ||
+    event.sender !== window.webContents ||
+    new URL(event.senderFrame.url).origin !== BASE
+  )
+    throw Error('Solicitud no válida.');
+  const result = await dialog.showOpenDialog(window, {
+    title: folder ? 'Abrir carpeta de proyecto portable' : 'Abrir proyecto .gepettos',
+    properties: [folder ? 'openDirectory' : 'openFile'],
+    ...(!folder ? { filters: [{ name: 'Proyecto Gepettos', extensions: ['gepettos'] }] } : {}),
+  });
+  return result.canceled ? null : result.filePaths[0];
+});
+
+ipcMain.handle('save-portable-project', async (event) => {
+  if (!window || event.sender !== window.webContents || new URL(event.senderFrame.url).origin !== BASE)
+    throw Error('Solicitud no válida.');
+  const result = await dialog.showSaveDialog(window, {
+    title: 'Guardar proyecto .gepettos · elige un archivo nuevo',
+    defaultPath: 'Proyecto.gepettos',
+    filters: [{ name: 'Proyecto Gepettos', extensions: ['gepettos'] }],
+  });
+  return result.canceled ? null : result.filePath;
+});
+
 if (!app.requestSingleInstanceLock()) app.quit();
 else {
   app.on('second-instance', (_event, argv) => {

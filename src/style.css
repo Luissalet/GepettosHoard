@@ -339,6 +339,23 @@ svg {
   padding: 10px 8px;
   margin-bottom: 12px;
 }
+.portable-form {
+  display: grid;
+  gap: 8px;
+  padding: 0 8px 16px;
+}
+.portable-form input {
+  width: 100%;
+  min-width: 0;
+}
+.portable-form small {
+  color: var(--muted, #65705e);
+}
+.portable-form > div {
+  display: flex;
+  gap: 8px;
+  align-items: center;
+}
 .group-heading {
   font-size: 10px;
   font-weight: 700;
