@@ -1,5 +1,7 @@
 # Sculptor’s Hoard
 
+[Español](README.es.md)
+
 **Turn painted character textures into editable 3D relief.**
 
 A local AI workspace for preparing heightmaps for Blender Figure Tools. Sculptor’s Hoard connects what a surface *means* on a 3D model to how it should displace: an eyelid, a pupil, a buckle and a painted shadow need different treatment.
@@ -20,6 +22,7 @@ flowchart LR
 
 ## What it does
 
+- **Reference-image posing (experimental).** Generate an ACNH rig pose from a character card or another image, compare the proposal, and save a separate Blender copy. Codex or explicitly selected local vision interprets the reference; constrained numerical fitting handles the joints. [Usage and limitations](docs/REFERENCE_POSE.md).
 - **Semantic preparation.** A vision model observes the complete figure before mapping its parts to numbered UV regions and their projected 3D locations. A validated scene description separates observed geometry from the artist's height policy. Hidden features can request another camera view and a matched close-up; saved per-part evidence is available in the editor. Distinctive details accidentally grouped with a broad surface receive a focused check.
 - **Actual 3D feedback.** Blender runs the installed Figure Tools nodes. The reviewer compares the displaced result with a uniform-height control, including facial close-ups. Complete figures are reviewed after body and clothing are assembled.
 - **Large textures.** Native-resolution RGBA PNG output with 16-bit heights, bounded-memory row processing, spatial color disambiguation, UV padding and a content cache. Identical black pupils and nostrils can remain independently editable.
