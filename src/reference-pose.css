@@ -81,7 +81,7 @@
   border: 1px solid var(--line);
   border-radius: 5px;
   background: var(--surface);
-  color: #303733;
+  color: var(--hoard-text);
   padding: 8px 10px;
   margin-right: 8px;
   cursor: pointer;
@@ -94,7 +94,7 @@
   padding-left: 0;
 }
 .pose-error {
-  color: #a33123;
+  color: var(--hoard-danger);
   font-size: 12px;
 }
 .pose-review {
@@ -163,15 +163,15 @@
 .pose-empty {
   text-align: center;
   padding: 24px;
-  color: #f0f3e9;
+  color: var(--hoard-text);
 }
 .pose-empty svg {
-  color: #bbc3b5;
+  color: var(--hoard-text-muted);
   margin-bottom: 15px;
 }
 .pose-empty span {
   display: block;
-  color: #c2c9bc;
+  color: var(--hoard-text-muted);
   font-size: 12px;
   line-height: 1.65;
   margin-top: 7px;
@@ -195,7 +195,7 @@
 }
 .pose-result-error strong,
 .pose-result-error p {
-  color: #a33123;
+  color: var(--hoard-danger);
 }
 .pose-spinner {
   animation: pose-spin 1.2s linear infinite;
