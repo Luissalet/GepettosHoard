@@ -58,6 +58,10 @@ Optional browser mode: `python start.py --web`. The local service uses `http://1
 
 Install `blender/relief_bridge.py` as a Blender add-on to send a scene and import exported maps. When manually refreshing Figure Tools textures, the demonstrated workflow remains **Auto Reload → confirm Subdivision → leave the field**. The background worker reloads images and forces reevaluation automatically.
 
+## Hoard family
+
+`faustus-plugin.json` lets Hoard Hub discover and start the app; there is no `/api/agent/call` contract. When an evaluation finishes and has produced `figure-ready.stl`, the app announces it on the family bus as `gepetto.export.done {path, ref, title, format, project_id, job_id}` (`ref` is `hoard://gepetto/export/<job id>`, `title` is the project name followed by "relief"). The Hub's recommended rule hands the `path` to the model library (`model_import_file`). The app writes `data/mcp-token` at start (the Hub knows the sender by it); without the Hub nothing changes. The STL is the only mesh export Sculptor's Hoard produces (no 3MF), and the PNG map bundles are not announced. `backend/hoard_link/` is the shared family library, vendored unchanged.
+
 ## Height policy
 
 The initial eye order follows the artist's preference:

@@ -30,6 +30,10 @@ También puedes abrir **Abrir Sculptors Hoard.vbs** tras instalarlo. La ventana 
 
 En **Equipo y lotes**, elige un modelo de visión instalado, escanea escenas `.blend`, prepara figuras, revisa el resultado y exporta mapas nativos, una escena editable o STL. El complemento `blender/relief_bridge.py` comunica Blender con la aplicación.
 
+## Familia Hoard
+
+`faustus-plugin.json` permite al Hub descubrir y arrancar la aplicación; no hay contrato `/api/agent/call`. Cuando una evaluación termina y ha producido `figure-ready.stl`, la aplicación lo anuncia en el bus de la familia como `gepetto.export.done {path, ref, title, format, project_id, job_id}` (`ref` es `hoard://gepetto/export/<id del trabajo>` y `title` el nombre del proyecto seguido de «relief»). La regla recomendada del Hub entrega el `path` a la biblioteca de modelos (`model_import_file`). La aplicación escribe `data/mcp-token` al arrancar (el Hub identifica al emisor por él); sin el Hub no cambia nada. El STL es la única malla que exporta Sculptor’s Hoard (no hay 3MF) y los paquetes de mapas PNG no se anuncian. `backend/hoard_link/` es la biblioteca compartida de la familia, incluida sin cambios.
+
 ## Pruebas y límites
 
 ```powershell

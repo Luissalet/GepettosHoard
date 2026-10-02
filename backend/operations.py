@@ -6,7 +6,7 @@ from pathlib import Path
 from typing import Literal
 from fastapi import APIRouter, HTTPException
 from pydantic import BaseModel, Field
-from . import runtime, project_history
+from . import runtime, project_history, family_events
 from .batch import Queue
 
 
@@ -28,6 +28,7 @@ def install(server):
     @asynccontextmanager
     async def lifespan(app):
         nonlocal queue
+        family_events.configure(server.DATA)  # family bus: token file + app name; the hub knows the sender by its token
         for history_file in server.DATA.glob("*/revisions/history.sqlite"):
             project_history.recover_published_files(history_file.parent.parent)
         queue = Queue(server.DATA / "batch")

@@ -29,6 +29,7 @@ from .processing import (
     HEIGHT_PALETTE,
 )
 from . import vision
+from . import family_events
 
 ROOT = Path(__file__).resolve().parents[1]
 DATA = Path(
@@ -879,6 +880,10 @@ def evaluation_job(jid, pid, body, snapshot):
             final=result["final"],
             aiAcceptable=result["aiAcceptable"],
         )
+        try:
+            family_events.announce_evaluation(snapshot.get("name", ""), pid, jid, out / "scene")
+        except Exception:  # noqa: BLE001 - telling the family never turns a finished job into an error
+            pass
     except Exception as e:
         progress(status="error", message=str(e)[:600])
 
