@@ -97,7 +97,7 @@ def test_finished_evaluation_job_announces_its_stl(tmp_path, monkeypatch, sent):
     assert server.jobs[jid]["status"] == "done", server.jobs[jid]
     assert len(sent) == 1 and sent[0][0] == "gepetto.export.done"
     data = sent[0][1]
-    assert data["path"].endswith(f"{pid}/evaluations/{jid}/scene/figure-ready.stl")
+    assert data["path"].replace("\\", "/").endswith(f"{pid}/evaluations/{jid}/scene/figure-ready.stl")
     assert data["ref"] == f"hoard://gepetto/export/{jid}" and data["title"] == "Escudo - relief"
 
 
