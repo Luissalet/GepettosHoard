@@ -3,6 +3,8 @@
 import copy, hashlib, json, shutil, sqlite3, time, uuid
 from pathlib import Path
 
+from .hoard_link.atomic import replace_with_retry, write_bytes_atomic, write_json_atomic
+
 
 def connect(folder):
     root = Path(folder) / "revisions"
@@ -28,9 +30,7 @@ def record(folder, project):
                 digest = hashlib.sha256(raw).hexdigest()
                 target = root / (digest + ".npz")
                 if not target.exists():
-                    temp = target.with_suffix("." + uuid.uuid4().hex + ".tmp")
-                    temp.write_bytes(raw)
-                    temp.replace(target)
+                    write_bytes_atomic(target, raw)
                 masks[asset["id"]] = digest
         # This committed document is the recovery source if publishing project.json
         # or restoring mask files is interrupted after/before a database commit.
@@ -130,11 +130,8 @@ def restore(folder, current, direction=None, checkpoint=None):
             dest = Path(folder) / (aid + ".npz")
             temp = dest.with_suffix(".restoring")
             shutil.copyfile(Path(folder) / "revisions" / (digest + ".npz"), temp)
-            temp.replace(dest)
-        dest = Path(folder) / "project.json"
-        temp = dest.with_suffix(".tmp")
-        temp.write_text(json.dumps(p, ensure_ascii=False, indent=2), "utf-8")
-        temp.replace(dest)
+            replace_with_retry(temp, dest)
+        write_json_atomic(Path(folder) / "project.json", p)
         db.execute(
             "INSERT OR REPLACE INTO meta VALUES('current_doc',?)",
             (json.dumps(p, ensure_ascii=False),),
@@ -171,7 +168,7 @@ def recover_published_files(folder):
             raise ValueError(f"La copia de recuperación de {aid} está dañada.")
         temp = destination.with_suffix(".recovering")
         shutil.copyfile(source, temp)
-        temp.replace(destination)
+        replace_with_retry(temp, destination)
         repaired = True
     destination = folder / "project.json"
     try:
@@ -179,8 +176,6 @@ def recover_published_files(folder):
     except (OSError, ValueError):
         matches = False
     if not matches:
-        temp = destination.with_suffix(".recovering")
-        temp.write_text(json.dumps(p, ensure_ascii=False, indent=2), "utf-8")
-        temp.replace(destination)
+        write_json_atomic(destination, p)
         repaired = True
     return repaired

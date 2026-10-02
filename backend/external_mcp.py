@@ -17,6 +17,7 @@ from pydantic import BaseModel, ConfigDict, Field
 from mcp.server.fastmcp import FastMCP, Image as MCPImage
 
 from . import project_history
+from .hoard_link.atomic import replace_with_retry, write_json_atomic
 from .commands import EditPlan, Operation, apply_operations
 from .processing import segment, segment_with_anchors, describe, render, png_bytes, displacement_color, write_manual_palette
 from .vision import SemanticRegion
@@ -67,9 +68,7 @@ class Store:
         p["updated"] = time.time()
         root = self.folder(p["id"])
         project_history.record(root, p)
-        temporary = root / "project.tmp"
-        temporary.write_text(json.dumps(p, ensure_ascii=False, indent=2), "utf-8")
-        temporary.replace(root / "project.json")
+        write_json_atomic(root / "project.json", p)
         return p
 
     def change(self, p, event):
@@ -172,7 +171,7 @@ class Store:
         mask_path = self.folder(pid) / f"{aid}.npz"
         temporary = mask_path.with_name(aid + ".tmp.npz")
         np.savez_compressed(temporary, labels=labels, centers=centers)
-        temporary.replace(mask_path)
+        replace_with_retry(temporary, mask_path)
         a.update(regions=regions, workWidth=work.width, workHeight=work.height,
                  version=a["version"] + 1, approved=False,
                  segmentation={"method": "explicit-rgb-anchors", "colors": colors,
@@ -235,7 +234,7 @@ class Store:
                     r[key] = original[key]
         temporary = mask_path.with_name(aid + ".tmp.npz")
         np.savez_compressed(temporary, labels=labels, centers=centers)
-        temporary.replace(mask_path)
+        replace_with_retry(temporary, mask_path)
         a.update(regions=regions, version=a["version"] + 1, approved=False)
         return self.change(p, {"type": "external-polygon-split", "asset": aid,
                                "region": region_id, "new_region": new_id, "points": points})

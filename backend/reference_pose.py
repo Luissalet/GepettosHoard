@@ -17,6 +17,7 @@ from PIL import Image,ImageOps
 from pydantic import BaseModel
 
 from .closed_loop import BLENDER,ROOT
+from .hoard_link.atomic import write_json_atomic
 from . import vision
 from pose_engine.core.card_pose_vision import codex_executable
 
@@ -76,9 +77,7 @@ class PoseQueue:
             p=self.folder(rid)
             data=json.loads((p/'run.json').read_text('utf-8'))
             data.update(values)
-            temp=p/'run.tmp'
-            temp.write_text(json.dumps(data,ensure_ascii=False,indent=2),encoding='utf-8')
-            temp.replace(p/'run.json')
+            write_json_atomic(p/'run.json',data)
 
     def list(self):
         items=[]
