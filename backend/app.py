@@ -30,6 +30,8 @@ from .processing import (
 )
 from . import vision
 from . import family_events
+from .hoard_link.atomic import write_json_atomic
+from .hoard_link.guard import install_guard
 
 ROOT = Path(__file__).resolve().parents[1]
 DATA = Path(
@@ -46,15 +48,10 @@ executor = ThreadPoolExecutor(max_workers=1, thread_name_prefix="sculptors-hoard
 jobs = {}
 
 
-@app.middleware("http")
-async def local_origin_only(request, call_next):
-    if request.method not in {"GET", "HEAD", "OPTIONS"}:
-        origin = request.headers.get("origin")
-        from urllib.parse import urlparse
-
-        if origin and urlparse(origin).hostname not in {"127.0.0.1", "localhost", "[::1]", "::1"}:
-            return Response("Local application only.", status_code=403)
-    return await call_next(request)
+# The shared request guard (Hoard Link): loopback Host (DNS rebinding), Origin and Fetch Metadata rules on every
+# request. GEPETTO_ALLOWED_HOSTS opens a LAN name or a tailnet on purpose. The port is not enforced, so the Vite dev
+# proxy (Host: localhost:5173) keeps working.
+install_guard(app, port_getter=lambda: int(os.environ.get("GEPETTO_PORT") or 8767), allowed_env="GEPETTO_ALLOWED_HOSTS")
 
 
 def folder(pid):
@@ -76,9 +73,7 @@ def save(p):
     from .project_history import record
 
     record(dest.parent, p)
-    temp = dest.with_suffix(".tmp")
-    temp.write_text(json.dumps(p, ensure_ascii=False, indent=2), "utf-8")
-    temp.replace(dest)
+    write_json_atomic(dest, p)
 
 
 def asset(p, aid):
@@ -108,6 +103,7 @@ def health():
     return {
         "ok": True,
         "application": "sculptors-hoard",
+        "service": "sculptors-hoard",
         "name": "Sculptor’s Hoard",
         "version": "0.1.0",
         "palette": PALETTE,

@@ -1,6 +1,8 @@
 from fastapi.testclient import TestClient
 from backend import app as server
 
+LOCAL = "http://127.0.0.1:8767"  # the shared request guard only accepts a loopback Host
+
 
 def test_contrast_preserves_order_reference_and_is_undoable(tmp_path, monkeypatch):
     monkeypatch.setattr(server, "DATA", tmp_path)
@@ -16,7 +18,7 @@ def test_contrast_preserves_order_reference_and_is_undoable(tmp_path, monkeypatc
         }
     ]
     server.save(p)
-    client = TestClient(server.app)
+    client = TestClient(server.app, base_url=LOCAL)
     base = f"/api/projects/{p['id']}"
     response = client.post(base + "/contrast", json={"factor": 1.5, "revision": p["revision"]})
     assert response.status_code == 200

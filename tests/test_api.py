@@ -4,11 +4,13 @@ from PIL import Image
 from fastapi.testclient import TestClient
 import backend.app as server
 
+LOCAL = "http://127.0.0.1:8767"  # the shared request guard only accepts a loopback Host
+
 
 @pytest.fixture
 def client(tmp_path, monkeypatch):
     monkeypatch.setattr(server, "DATA", tmp_path)
-    with TestClient(server.app) as c:
+    with TestClient(server.app, base_url=LOCAL) as c:
         yield c
 
 

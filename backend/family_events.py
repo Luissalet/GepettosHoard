@@ -8,11 +8,11 @@ the model library. Nothing here needs the hub: without it the emit is a quiet no
 from __future__ import annotations
 
 import logging
-import secrets
 from pathlib import Path
 from typing import Any
 
 from .hoard_link import family
+from .hoard_link.tokens import read_or_create_token
 
 APP_ID = "gepetto"
 EVENT = "gepetto.export.done"
@@ -24,13 +24,7 @@ def configure(data_dir: Path | str) -> str:
     """Name this app for the library and make sure its token file exists (the hub identifies the sender by it)."""
     token_file = Path(data_dir) / "mcp-token"
     try:
-        if not token_file.is_file() or not token_file.read_text(encoding="utf-8-sig").strip():
-            token_file.parent.mkdir(parents=True, exist_ok=True)
-            token_file.write_text(secrets.token_urlsafe(32), encoding="utf-8")
-            try:
-                token_file.chmod(0o600)
-            except OSError:
-                pass
+        read_or_create_token(token_file)  # atomic, 0600, two starting processes agree on one token
     except OSError:
         log.warning("could not write %s", token_file)
     family.configure(APP_ID, str(data_dir), token_file=str(token_file))

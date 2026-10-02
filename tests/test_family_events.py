@@ -7,6 +7,8 @@ from fastapi.testclient import TestClient
 import backend.app as server
 from backend import closed_loop, family_events
 
+LOCAL = "http://127.0.0.1:8767"  # the shared request guard only accepts a loopback Host
+
 STL = b"solid x\nendsolid x\n"
 
 
@@ -60,7 +62,7 @@ def test_configure_writes_the_token_once_and_names_the_app(tmp_path):
 
 def test_startup_writes_the_token_in_the_data_folder(tmp_path, monkeypatch):
     monkeypatch.setattr(server, "DATA", tmp_path)
-    with TestClient(server.app):
+    with TestClient(server.app, base_url=LOCAL):
         assert (tmp_path / "mcp-token").is_file()
 
 
@@ -84,7 +86,7 @@ def test_finished_evaluation_job_announces_its_stl(tmp_path, monkeypatch, sent):
         }
 
     monkeypatch.setattr(closed_loop, "run", fake_run)
-    with TestClient(server.app) as client:
+    with TestClient(server.app, base_url=LOCAL) as client:
         pid = client.post("/api/projects", json={"name": "Escudo"}).json()["id"]
         snapshot = server.read(pid)
         snapshot["blenderSource"] = {"file": "x.blend"}
@@ -116,7 +118,7 @@ def test_evaluation_without_stl_emits_nothing(tmp_path, monkeypatch, sent):
         }
 
     monkeypatch.setattr(closed_loop, "run", fake_run)
-    with TestClient(server.app) as client:
+    with TestClient(server.app, base_url=LOCAL) as client:
         pid = client.post("/api/projects", json={"name": "Sin STL"}).json()["id"]
         snapshot = server.read(pid)
         snapshot["blenderSource"] = {"file": "x.blend"}
