@@ -10,6 +10,8 @@ from PIL import Image
 import backend.app as server
 import backend.blend_import as importer
 
+LOCAL = "http://127.0.0.1:8767"  # the shared request guard only accepts a loopback Host
+
 
 @pytest.fixture
 def setup(tmp_path, monkeypatch):
@@ -53,7 +55,7 @@ def test_blend_replaces_inventory_in_one_undoable_change(setup, monkeypatch):
     pid = setup["id"]
     server.ingest(pid, "old.dae", b"old preview")
     before = server.read(pid)
-    monkeypatch.setattr(importer.subprocess, "run", successful_worker)
+    monkeypatch.setattr(importer, "run_blender", successful_worker)
     result = importer.import_blend(server, pid, "Figure.blend", b"BLENDER")
     assert result["revision"] == before["revision"] + 1
     assert len(result["models"]) == len(result["assets"]) == 1
@@ -78,7 +80,7 @@ def test_missing_applied_texture_keeps_existing_project_intact(setup, monkeypatc
         )
         return SimpleNamespace(returncode=0)
 
-    monkeypatch.setattr(importer.subprocess, "run", failed)
+    monkeypatch.setattr(importer, "run_blender", failed)
     with pytest.raises(HTTPException, match="Falta la textura aplicada"):
         importer.import_blend(server, setup["id"], "Figure.blend", b"BLENDER")
     assert server.read(setup["id"]) == before
@@ -93,7 +95,7 @@ def test_concurrent_edit_is_not_overwritten(setup, monkeypatch):
         server.save(changed)
         return SimpleNamespace(returncode=0)
 
-    monkeypatch.setattr(importer.subprocess, "run", edited)
+    monkeypatch.setattr(importer, "run_blender", edited)
     with pytest.raises(HTTPException) as error:
         importer.import_blend(server, setup["id"], "Figure.blend", b"BLENDER")
     assert error.value.status_code == 409
@@ -108,7 +110,7 @@ def test_direct_upload_prefers_blend_over_loose_dae_and_textures(setup, monkeypa
         return api.read(pid) | {"blendImport": {"warnings": []}}
 
     monkeypatch.setattr(importer, "import_blend", extract)
-    with TestClient(server.app) as client:
+    with TestClient(server.app, base_url=LOCAL) as client:
         result = client.post(
             f"/api/projects/{setup['id']}/import",
             files=[
@@ -133,7 +135,7 @@ def test_desktop_path_opens_original_location_for_relative_images(setup, tmp_pat
         return api.read(pid)
 
     monkeypatch.setattr(importer, "import_blend", extract)
-    with TestClient(server.app) as client:
+    with TestClient(server.app, base_url=LOCAL) as client:
         response = client.post(
             f"/api/projects/{setup['id']}/import-blender-path", json={"path": str(source)}
         )

@@ -16,6 +16,8 @@ from .surface_plan import (
     protect_eye_order,
 )
 from .native_surface import export_height, export_control
+from .hoard_link import proc
+from .hoard_link.atomic import replace_with_retry
 
 ROOT = Path(__file__).resolve().parents[1]
 BLENDER = Path(
@@ -26,6 +28,22 @@ BLENDER = Path(
         ),
     )
 )
+
+
+def run_blender(argv, *, log, timeout):
+    """Run Blender headless to the end through the shared process runner: the whole process tree is killed when the
+    timeout hits (Blender's own children included) and no console window flashes on Windows. Everything Blender
+    printed (stdout and stderr) goes to ``log``, also when the run times out. Returns the finished process."""
+    def text(value):
+        return value.decode("utf-8", "replace") if isinstance(value, bytes) else (value or "")
+
+    try:
+        done = proc.run(argv, timeout=timeout)
+    except subprocess.TimeoutExpired as exc:
+        Path(log).write_text(text(exc.stdout) + text(exc.stderr), "utf-8")
+        raise
+    Path(log).write_text(text(done.stdout) + text(done.stderr), "utf-8")
+    return done
 
 
 def review_assembled_back(
@@ -177,7 +195,7 @@ def export_cached(item, folder, regions, target):
 
     temp = cache / f"{digest.hexdigest()}-{uuid.uuid4().hex}.tmp"
     shutil.copy2(target, temp)
-    temp.replace(cached)
+    replace_with_retry(temp, cached)
     return metric | {"cached": False}
 
 
@@ -199,24 +217,22 @@ def worker(source, scene, phase, label=None, maps=None, **options):
         else f"{name}-report.json"
     )
     report.unlink(missing_ok=True)
-    with (scene / f"{name}.log").open("w") as log:
-        result = subprocess.run(
-            [
-                str(BLENDER),
-                "--background",
-                "--threads",
-                "4",
-                "--disable-autoexec",
-                str(source),
-                "--python",
-                str(ROOT / "blender/evaluation_worker.py"),
-                "--",
-                str(config),
-            ],
-            stdout=log,
-            stderr=subprocess.STDOUT,
-            timeout=600,
-        )
+    result = run_blender(
+        [
+            str(BLENDER),
+            "--background",
+            "--threads",
+            "4",
+            "--disable-autoexec",
+            str(source),
+            "--python",
+            str(ROOT / "blender/evaluation_worker.py"),
+            "--",
+            str(config),
+        ],
+        log=scene / f"{name}.log",
+        timeout=600,
+    )
     if result.returncode or not report.exists():
         raise RuntimeError(f"Blender no completó {name}. Consulta el registro de esta evaluación.")
     return json.loads(report.read_text("utf-8"))

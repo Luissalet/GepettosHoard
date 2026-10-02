@@ -8,7 +8,7 @@ from pathlib import Path
 from fastapi import HTTPException
 from PIL import Image
 
-from .closed_loop import BLENDER, ROOT
+from .closed_loop import BLENDER, ROOT, run_blender
 
 
 def import_blend(server, pid, name, content, source_path=None):
@@ -36,25 +36,23 @@ def import_blend(server, pid, name, content, source_path=None):
     config = output / "import.json"
     config.write_text(json.dumps({"output": str(output)}), "utf-8")
     try:
-        with (output / "import.log").open("w", encoding="utf-8") as log:
-            result = subprocess.run(
-                [
-                    str(BLENDER),
-                    "--background",
-                    "--factory-startup",
-                    "--disable-autoexec",
-                    "--threads",
-                    "4",
-                    str(source_path or source),
-                    "--python",
-                    str(ROOT / "blender/import_worker.py"),
-                    "--",
-                    str(config),
-                ],
-                stdout=log,
-                stderr=subprocess.STDOUT,
-                timeout=180,
-            )
+        result = run_blender(
+            [
+                str(BLENDER),
+                "--background",
+                "--factory-startup",
+                "--disable-autoexec",
+                "--threads",
+                "4",
+                str(source_path or source),
+                "--python",
+                str(ROOT / "blender/import_worker.py"),
+                "--",
+                str(config),
+            ],
+            log=output / "import.log",
+            timeout=180,
+        )
     except subprocess.TimeoutExpired:
         raise HTTPException(
             400, "Blender tardó demasiado en abrir la escena. Se conserva tu proyecto anterior."
