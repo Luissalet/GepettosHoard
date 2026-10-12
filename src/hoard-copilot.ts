@@ -33,10 +33,11 @@ const same = (a: unknown, b: unknown) => JSON.stringify(a ?? null) === JSON.stri
 
 /** Pure: the context additions for a view, reading real data through `load` (the app's own API). */
 export async function buildContext(
-  state: CopilotView,
+  currentState: CopilotView,
   load: Loader,
   fallbackProjectId: string | null = null,
 ) {
+  const state = structuredClone(currentState);
   const page =
     state.panel === 'workspace' ? (state.projectId ? 'project' : 'library') : state.panel;
   const out: {

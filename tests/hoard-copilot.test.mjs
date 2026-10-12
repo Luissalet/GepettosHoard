@@ -40,6 +40,23 @@ const state = (patch = {}) => ({
   ...patch,
 });
 
+test('a pending project read keeps the originating view and nested draft', async () => {
+  const current = state({ assetId: 'tex0000001', regionId: 1, regionDraft: { name: 'A draft', height: 60 }, commandDraft: 'A instruction' });
+  let resolve;
+  const pending = new Promise((done) => { resolve = done; });
+  const answer = buildContext(current, () => pending);
+  current.regionDraft.name = 'B nested draft';
+  Object.assign(current, { projectId: 'bbbbbbbbbbbb', assetId: 'b1', regionId: 2, surface: 'uv', tab: 'other', panel: 'control', commandDraft: 'B instruction' });
+  resolve(structuredClone(project));
+  const ctx = await answer;
+  assert.equal(ctx.project.external_project_id, project.id);
+  assert.equal(ctx.view.page, 'project');
+  assert.equal(ctx.view.surface, 'model');
+  assert.equal(ctx.view.inspector_tab, 'regions');
+  assert.equal(ctx.view.editor.fields.name, 'A draft');
+  assert.deepEqual(ctx.active_objects.map((x) => [x.kind, x.object_id]), [['project', project.id], ['texture', 'tex0000001'], ['region', 'tex0000001:1']]);
+});
+
 test('a project view returns the real project, texture and omits nothing it knows', async () => {
   const ctx = await buildContext(state(), loader(project));
   assert.equal(ctx.project.external_project_id, project.id);
