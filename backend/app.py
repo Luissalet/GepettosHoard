@@ -33,6 +33,7 @@ from . import family_events
 from .hoard_link.atomic import write_json_atomic
 from .hoard_link.copilot import install_copilot
 from .hoard_link.guard import install_guard
+from .project_lock import ProjectLock
 
 ROOT = Path(__file__).resolve().parents[1]
 DATA = Path(
@@ -43,7 +44,7 @@ DATA = Path(
 DATA.mkdir(parents=True, exist_ok=True)
 Image.MAX_IMAGE_PIXELS = 100_000_000
 app = FastAPI(title="Sculptor’s Hoard", version="0.1.0")
-lock = threading.RLock()
+lock = ProjectLock(DATA)
 export_guard = threading.BoundedSemaphore(1)
 executor = ThreadPoolExecutor(max_workers=1, thread_name_prefix="sculptors-hoard-vision")
 jobs = {}

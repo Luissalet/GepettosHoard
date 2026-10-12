@@ -5,7 +5,6 @@ import argparse
 import json
 import re
 import shutil
-import threading
 import time
 import uuid
 from pathlib import Path
@@ -21,6 +20,7 @@ from .hoard_link.atomic import replace_with_retry, write_json_atomic
 from .commands import EditPlan, Operation, apply_operations
 from .processing import segment, segment_with_anchors, describe, render, png_bytes, displacement_color, write_manual_palette
 from .vision import SemanticRegion
+from .project_lock import ProjectLock
 
 
 class SemanticEdit(SemanticRegion):
@@ -54,7 +54,7 @@ class Store:
         if self.root == default or default in self.root.parents:
             raise ValueError("The application's default data directory is forbidden.")
         self.root.mkdir(parents=True, exist_ok=True)
-        self.lock = threading.RLock()
+        self.lock = ProjectLock(self.root)
 
     def folder(self, pid):
         if not re.fullmatch(r"[a-f0-9]{12}", pid):
