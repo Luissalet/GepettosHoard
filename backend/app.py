@@ -409,6 +409,36 @@ class EditRequest(BaseModel):
     revision: int | None = None
 
 
+class RegionPatch(BaseModel):
+    id: int
+    fields: dict
+
+
+class RegionPatches(BaseModel):
+    patches: list[RegionPatch]
+
+
+@app.patch("/api/projects/{pid}/assets/{aid}/regions")
+def patch_regions(pid: str, aid: str, body: RegionPatches):
+    with lock:
+        p = read(pid)
+        a = asset(p, aid)
+        merged = {r["id"]: r.copy() for r in a["regions"]}
+        for patch in body.patches:
+            if patch.id not in merged:
+                raise HTTPException(404, "Superficie no encontrada.")
+            if set(patch.fields) - {"name", "height", "displacementColor"}:
+                raise HTTPException(400, "Campo de superficie no editable.")
+            merged[patch.id].update(patch.fields)
+        try:
+            regions = [RegionEdit.model_validate(r) for r in merged.values()]
+        except ValueError as error:
+            raise HTTPException(400, "Ajuste de superficie no válido.") from error
+        if not any(patch.fields for patch in body.patches):
+            return p
+        return edit(pid, aid, EditRequest(regions=regions, revision=p["revision"]))
+
+
 @app.patch("/api/projects/{pid}/assets/{aid}")
 def edit(pid: str, aid: str, body: EditRequest):
     with lock:

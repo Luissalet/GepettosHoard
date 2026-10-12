@@ -98,3 +98,29 @@ def test_the_off_switch_removes_the_routes():
     env = {**__import__("os").environ, "HOARD_COPILOT": "0", "SCULPTORS_HOARD_DATA_DIR": str(ROOT / "test-results" / "copilot-off")}
     out = subprocess.run([sys.executable, "-c", code], cwd=ROOT, env=env, capture_output=True, text=True, timeout=120)
     assert out.stdout.strip().splitlines()[-1] == "False", out.stderr
+
+
+def test_partial_region_save_preserves_a_native_edit_and_invalid_patches_write_nothing(client):
+    from PIL import Image
+    from io import BytesIO
+    from backend.external_mcp import Store
+    pid = client.post('/api/projects', json={'name': 'Concurrent fixture'}).json()['id']
+    image = BytesIO()
+    Image.new('RGB', (16, 16), (230, 210, 180)).save(image, format='PNG')
+    p = client.post(f'/api/projects/{pid}/import', files=[('files', ('fixture.png', image.getvalue(), 'image/png'))]).json()['project']
+    aid = p['assets'][0]['id']
+    store = Store(str(server.DATA))
+    p = store.prepare_anchors(pid, aid, [[230, 210, 180]], p['revision'], 256)
+    rid = p['assets'][0]['regions'][0]['id']
+    p = store.apply(pid, {'revision': p['revision'], 'author': 'Native agent', 'evidence': ['Fixture'], 'explanation': 'Concurrent height', 'regions': [{'key': f'{aid}:{rid}', 'name': 'Agent name', 'reason': 'Native', 'confidence': 1., 'geometry': 'unknown', 'height': 88}]})
+    response = client.patch(f'/api/projects/{pid}/assets/{aid}/regions', json={'patches': [{'id': rid, 'fields': {'name': 'User name'}}]})
+    assert response.status_code == 200
+    region = response.json()['assets'][0]['regions'][0]
+    assert (region['name'], region['height'], region['reason']) == ('User name', 88, 'Native')
+    file = store.folder(pid) / 'project.json'
+    before = file.read_bytes()
+    for patch in [{'id': rid, 'fields': {'height': 300}}, {'id': rid, 'fields': {'name': None}}, {'id': rid, 'fields': {'reason': 'Override'}}, {'id': 999, 'fields': {'name': 'Wrong'}}]:
+        assert client.patch(f'/api/projects/{pid}/assets/{aid}/regions', json={'patches': [patch]}).status_code in (400, 404)
+        assert file.read_bytes() == before
+    assert client.patch(f'/api/projects/{pid}/assets/{aid}/regions', json={'patches': []}).status_code == 200
+    assert file.read_bytes() == before

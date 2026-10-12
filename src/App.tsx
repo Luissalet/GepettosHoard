@@ -31,7 +31,7 @@ import ReferencePosePanel from './ReferencePosePanel';
 import SceneReading from './SceneReading';
 import type { ViewportHandle } from './Viewport';
 import { api, imageUrl, PALETTE } from './types';
-import { onAgentChange, reportView } from './hoard-copilot';
+import { changedRegionFields, onAgentChange, rebaseProject, reportView } from './hoard-copilot';
 import type { Asset, ImageMode, Project, Region, Relation, Surface } from './types';
 
 type Summary = { id: string; name: string; updated: number; textures: number };
@@ -168,6 +168,7 @@ export default function App() {
   const viewer = useRef<ViewportHandle>(null);
   const editor = useRef<HTMLElement>(null);
   const latest = useRef(project);
+  const savedProject = useRef<Project | null>(null);
   latest.current = project;
   const active = project?.assets.find((a) => a.id === activeId) ?? project?.assets[0] ?? null;
   const region = active?.regions.find((r) => r.id === selected) ?? null;
@@ -188,6 +189,7 @@ export default function App() {
       regionDraft: region
         ? { name: region.name, height: region.height, displacementColor: region.displacementColor ?? null }
         : null,
+      regionChanges: region ? changedRegionFields(savedProject.current?.assets.find((a) => a.id === active?.id)?.regions.find((r) => r.id === region.id), region) : {},
     });
   }, [project?.id, active?.id, region, surface, mode, tab, posePanel, control]);
   useEffect(
@@ -196,21 +198,16 @@ export default function App() {
         const reload = async () => {
           try {
             await pendingEdit.current.catch(() => {});
-            await refreshProjects();
             const id = latest.current?.id;
-            if (id) accept(await api<Project>(`/projects/${id}`));
+            await refreshProjects();
+            if (id) {
+              const fresh = await api<Project>(`/projects/${id}`);
+              if (latest.current?.id === id) accept(fresh);
+            }
           } catch {
             /* the next action reloads */
           }
         };
-        const focused = document.activeElement;
-        if (focused instanceof HTMLElement && focused.closest('.region-editor')) {
-          // an edit is in progress: wait for its save, never replace what is being typed
-          focused.addEventListener('blur', () => setTimeout(() => void reload(), 300), {
-            once: true,
-          });
-          return;
-        }
         void reload();
       }),
     [],
@@ -218,8 +215,10 @@ export default function App() {
   function accept(p: Project) {
     if (!latest.current || latest.current.id !== p.id)
       setSurface(p.evaluation ? 'figure' : p.models.length ? 'model' : 'uv');
-    latest.current = p;
-    setProject(p);
+    const merged = rebaseProject(savedProject.current, p, latest.current);
+    savedProject.current = p;
+    latest.current = merged;
+    setProject(merged);
     localStorage.setItem('relief-project', p.id);
     const url = new URL(location.href);
     url.searchParams.set('project', p.id);
@@ -543,10 +542,17 @@ export default function App() {
     const p = latest.current;
     if (!p || !active) return;
     const a = p.assets.find((a) => a.id === active.id)!;
-    pendingEdit.current = api<Project>(`/projects/${p.id}/assets/${a.id}`, {
+    const original = savedProject.current?.assets.find((item) => item.id === a.id);
+    const patches = a.regions.map((item) => ({ id: item.id, fields: changedRegionFields(original?.regions.find((r) => r.id === item.id), item) })).filter((item) => Object.keys(item.fields).length);
+    if (!patches.length) return;
+    pendingEdit.current = api<Project>(`/projects/${p.id}/assets/${a.id}/regions`, {
       method: 'PATCH',
-      body: JSON.stringify({ regions: a.regions, revision: p.revision }),
-    }).then(accept);
+      body: JSON.stringify({ patches }),
+    }).then((fresh) => {
+      if (latest.current?.id !== p.id) return;
+      savedProject.current = p;
+      accept(fresh);
+    });
     await run('Guardando cambio…', async () => {
       await pendingEdit.current;
     });

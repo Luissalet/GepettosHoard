@@ -1,7 +1,7 @@
 // Unit tests for the copilot context helper: node --test tests/hoard-copilot.test.mjs
 import assert from 'node:assert/strict';
 import test from 'node:test';
-import { buildContext, reportView, view } from '../src/hoard-copilot.ts';
+import { buildContext, changedRegionFields, rebaseProject, reportView, view } from '../src/hoard-copilot.ts';
 
 const project = {
   id: 'abcdef012345',
@@ -55,6 +55,33 @@ test('a pending project read keeps the originating view and nested draft', async
   assert.equal(ctx.view.inspector_tab, 'regions');
   assert.equal(ctx.view.editor.fields.name, 'A draft');
   assert.deepEqual(ctx.active_objects.map((x) => [x.kind, x.object_id]), [['project', project.id], ['texture', 'tex0000001'], ['region', 'tex0000001:1']]);
+});
+
+test('refresh adopts an agent height while preserving the user name and a save acknowledges only its snapshot', () => {
+  const base = structuredClone(project);
+  const draft = structuredClone(base);
+  draft.assets[0].regions[1].name = 'User draft';
+  const fresh = structuredClone(base);
+  fresh.assets[0].regions[1].height = 88;
+  const merged = rebaseProject(base, fresh, draft);
+  assert.equal(merged.assets[0].regions[1].name, 'User draft');
+  assert.equal(merged.assets[0].regions[1].height, 88);
+  assert.deepEqual(changedRegionFields(fresh.assets[0].regions[1], merged.assets[0].regions[1]), { name: 'User draft' });
+  const later = structuredClone(merged);
+  later.assets[0].regions[1].name = 'Later typing';
+  const saved = structuredClone(fresh);
+  saved.assets[0].regions[1].name = 'User draft';
+  assert.equal(rebaseProject(merged, saved, later).assets[0].regions[1].name, 'Later typing');
+  assert.equal(rebaseProject(base, { ...fresh, id: 'other' }, draft).id, 'other');
+});
+
+test('context distinguishes user edits from a server field changed during its read', async () => {
+  const fresh = structuredClone(project);
+  fresh.assets[0].regions[1].height = 88;
+  const current = state({ assetId: 'tex0000001', regionId: 1, regionDraft: { name: 'Eyes', height: 90 }, regionChanges: {} });
+  assert.equal((await buildContext(current, loader(fresh))).view.editor, undefined);
+  current.regionChanges = { name: 'User draft' };
+  assert.deepEqual((await buildContext(current, loader(fresh))).view.editor.fields, { name: 'User draft' });
 });
 
 test('a project view returns the real project, texture and omits nothing it knows', async () => {

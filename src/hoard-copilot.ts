@@ -1,7 +1,23 @@
 // What the Faustus copilot panel (launcher) asks this app for: the real objects open in the view.
 // The launcher is injected by the server (`install_copilot`); this module only answers `window.hoardCopilot.context()`
 // and tells the app to refresh after an agent turn. It never throws and never rejects.
-import type { Project } from './types';
+import type { Project, Region } from './types';
+
+const REGION_FIELDS = ['name', 'height', 'displacementColor'] as const;
+export function changedRegionFields(base: Region | undefined, current: Region) {
+  return Object.fromEntries(REGION_FIELDS.filter((key) =>
+    JSON.stringify(base?.[key] ?? null) !== JSON.stringify(current[key] ?? null),
+  ).map((key) => [key, current[key] ?? null]));
+}
+
+export function rebaseProject(base: Project | null, fresh: Project, current: Project | null): Project {
+  if (base?.id !== fresh.id || current?.id !== fresh.id) return fresh;
+  return { ...fresh, assets: fresh.assets.map((asset) => ({ ...asset, regions: asset.regions.map((region) => {
+    const before = base.assets.find((a) => a.id === asset.id)?.regions.find((r) => r.id === region.id);
+    const draft = current.assets.find((a) => a.id === asset.id)?.regions.find((r) => r.id === region.id);
+    return before && draft ? { ...region, ...changedRegionFields(before, draft) } : region;
+  }) })) };
+}
 
 export type CopilotView = {
   projectId: string | null;
@@ -13,6 +29,7 @@ export type CopilotView = {
   panel: 'workspace' | 'control' | 'pose';
   regionDraft: { name: string; height: number; displacementColor?: number[] | null } | null;
   commandDraft: string;
+  regionChanges?: Record<string, unknown>;
 };
 
 export const view: CopilotView = {
@@ -103,8 +120,9 @@ export async function buildContext(
         height: region.height,
         displacementColor: region.displacementColor ?? null,
       };
-      if (draft && !same({ ...draft, displacementColor: draft.displacementColor ?? null }, saved)) {
-        out.view.editor = { kind: 'region', dirty: true, fields: { ...draft }, saved };
+      const changes = state.regionChanges;
+      if (changes !== undefined ? Object.keys(changes).length > 0 : draft && !same({ ...draft, displacementColor: draft.displacementColor ?? null }, saved)) {
+        out.view.editor = { kind: 'region', dirty: true, fields: changes ?? { ...draft }, saved };
       }
     }
   }
