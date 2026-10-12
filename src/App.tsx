@@ -31,6 +31,7 @@ import ReferencePosePanel from './ReferencePosePanel';
 import SceneReading from './SceneReading';
 import type { ViewportHandle } from './Viewport';
 import { api, imageUrl, PALETTE } from './types';
+import { onAgentChange, reportView } from './hoard-copilot';
 import type { Asset, ImageMode, Project, Region, Relation, Surface } from './types';
 
 type Summary = { id: string; name: string; updated: number; textures: number };
@@ -174,6 +175,46 @@ export default function App() {
   const ready = project?.assets.filter((a) => a.regions.length).length ?? 0;
   const pendingEdit = useRef<Promise<unknown>>(Promise.resolve());
   const working = !!busy || (!!job && ['running', 'queued'].includes(job.status));
+  // The Faustus copilot asks what is open: report the real ids, and refresh after an agent turn.
+  useEffect(() => {
+    reportView({
+      projectId: project?.id ?? null,
+      assetId: active?.id ?? null,
+      regionId: region?.id ?? null,
+      surface,
+      mode,
+      tab,
+      panel: posePanel ? 'pose' : control ? 'control' : 'workspace',
+      regionDraft: region
+        ? { name: region.name, height: region.height, displacementColor: region.displacementColor ?? null }
+        : null,
+    });
+  }, [project?.id, active?.id, region, surface, mode, tab, posePanel, control]);
+  useEffect(
+    () =>
+      onAgentChange(() => {
+        const reload = async () => {
+          try {
+            await pendingEdit.current.catch(() => {});
+            await refreshProjects();
+            const id = latest.current?.id;
+            if (id) accept(await api<Project>(`/projects/${id}`));
+          } catch {
+            /* the next action reloads */
+          }
+        };
+        const focused = document.activeElement;
+        if (focused instanceof HTMLElement && focused.closest('.region-editor')) {
+          // an edit is in progress: wait for its save, never replace what is being typed
+          focused.addEventListener('blur', () => setTimeout(() => void reload(), 300), {
+            once: true,
+          });
+          return;
+        }
+        void reload();
+      }),
+    [],
+  );
   function accept(p: Project) {
     if (!latest.current || latest.current.id !== p.id)
       setSurface(p.evaluation ? 'figure' : p.models.length ? 'model' : 'uv');

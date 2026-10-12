@@ -62,6 +62,14 @@ Install `blender/relief_bridge.py` as a Blender add-on to send a scene and impor
 
 `faustus-plugin.json` lets Hoard Hub discover and start the app; there is no `/api/agent/call` contract. When an evaluation finishes and has produced `figure-ready.stl`, the app announces it on the family bus as `gepetto.export.done {path, ref, title, format, project_id, job_id}` (`ref` is `hoard://gepetto/export/<job id>`, `title` is the project name followed by "relief"). The Hub's recommended rule hands the `path` to the model library (`model_import_file`). The app writes `data/mcp-token` at start (the Hub knows the sender by it); without the Hub nothing changes. The STL is the only mesh export Sculptor's Hoard produces (no 3MF), and the PNG map bundles are not announced. `backend/hoard_link/` is the shared family library, vendored unchanged; the app takes from it the request guard (loopback Host, Origin and Fetch Metadata rules on every request; `GEPETTO_ALLOWED_HOSTS` opens a LAN or tailnet name on purpose), the token file, atomic writes of `project.json`, the undo history and the pose runs (`atomic`), and the Blender process runner (`proc`, which kills Blender's whole process tree on a timeout and logs everything it printed). `/api/health` reports `service` next to the older `application` key.
 
+## Faustus copilot
+
+A floating **Faustus** button (bottom right) opens a side panel with the Faustus chat, served by Faustus through this app's own relay (`/api/copilot/*`; the Faustus token stays on the server). The conversation, model and tools live in Faustus; the app keeps no chat loop or history. One conversation is kept per project.
+
+Each turn carries what is open, read with the app's own API: the **project** (id, name, texture and model counts, revision, approved, proposal/evaluation present), the open **texture** (id, name, prepared regions, approved), the selected **region** (`<texture id>:<region number>`, name, height, geometry), the **evaluation** when there is one, and the page (workspace, team and batches, or pose from image) with the 3D/UV/relief surface, image mode and inspector tab. Unsaved input goes in `view.editor`: a region name or height being edited (with the saved values beside it) and an instruction typed but not sent. After an agent turn the project list and the open project reload by themselves; a region being edited is never replaced while the field has focus.
+
+Turn it off with `HOARD_COPILOT=0` (the relay, the launcher and the button disappear). Faustus is found through `HOARD_FAUSTUS_URL` (and `HOARD_FAUSTUS_TOKEN`) or the Hoard Link config. Region edits are saved as the whole region list of the texture guarded by the project revision (a stale save answers 409 instead of overwriting an agent's change); there is no partial-update endpoint.
+
 ## Height policy
 
 The initial eye order follows the artist's preference:

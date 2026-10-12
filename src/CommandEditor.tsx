@@ -1,6 +1,7 @@
-import { useState } from 'react';
+import { useEffect, useState } from 'react';
 import { Sparkle } from '@phosphor-icons/react';
 import { api } from './types';
+import { reportView } from './hoard-copilot';
 import type { Project } from './types';
 
 export default function CommandEditor({
@@ -21,6 +22,10 @@ export default function CommandEditor({
   const [instruction, setInstruction] = useState(''),
     [message, setMessage] = useState(''),
     [error, setError] = useState('');
+  useEffect(() => {
+    reportView({ commandDraft: instruction });
+    return () => reportView({ commandDraft: '' });
+  }, [instruction]);
   async function submit() {
     if (!instruction.trim()) return;
     setError('');

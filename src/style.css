@@ -1932,3 +1932,8 @@ h1 {
   background: var(--hoard-accent-soft);
   color: var(--hoard-text);
 }
+
+/* The Faustus copilot button sits above the status bar, clear of the inspector's footer. */
+html {
+  --hoard-copilot-bottom: 40px;
+}

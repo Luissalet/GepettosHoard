@@ -31,6 +31,7 @@ from .processing import (
 from . import vision
 from . import family_events
 from .hoard_link.atomic import write_json_atomic
+from .hoard_link.copilot import install_copilot
 from .hoard_link.guard import install_guard
 
 ROOT = Path(__file__).resolve().parents[1]
@@ -52,6 +53,11 @@ jobs = {}
 # request. GEPETTO_ALLOWED_HOSTS opens a LAN name or a tailnet on purpose. The port is not enforced, so the Vite dev
 # proxy (Host: localhost:5173) keeps working.
 install_guard(app, port_getter=lambda: int(os.environ.get("GEPETTO_PORT") or 8767), allowed_env="GEPETTO_ALLOWED_HOSTS")
+
+
+# The Faustus copilot: relay + launcher (the panel itself lives in Faustus). HOARD_COPILOT=0 turns it off.
+if os.environ.get("HOARD_COPILOT") != "0":
+    install_copilot(app, "gepetto", DATA, app_name="Gepetto's Hoard")
 
 
 def folder(pid):
