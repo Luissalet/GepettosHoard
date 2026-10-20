@@ -1,3 +1,7 @@
+> **Absorbido por [Vulcan's Hoard](https://github.com/Luissalet/VulcanHoard).**
+> Las funciones de este proyecto se mantienen en el Hoard fusionado, con módulos independientes y apagados inicialmente.
+> El código y las instrucciones siguientes se conservan como referencia histórica; usa el repositorio enlazado para la instalación actual.
+
 # Sculptor’s Hoard
 
 [English](README.md)
